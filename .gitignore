@@ -1,0 +1,82 @@
+# ==========================================================
+# 1. Node.js & Frontend (React + Vite + TypeScript)
+# ==========================================================
+node_modules/
+dist/
+dist-ssr/
+.vite/
+*.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ==========================================================
+# 2. Tauri v2 & Rust Backend (src-tauri)
+# ==========================================================
+target/
+src-tauri/target/
+src-tauri/gen/schemas/
+src-tauri/WixTools/
+*.pdb
+*.d
+*.rlib
+*.dll
+*.exe
+*.msi
+*.AppImage
+*.deb
+*.dmg
+
+# ==========================================================
+# 3. GameYard Local Database, Cache & Secrets
+# ==========================================================
+# Jangan commit database katalog/playtime lokal developer
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+
+# Jangan commit cache ekstraksi ikon .exe dan cover art lokal
+cache/
+covers/
+icons/
+
+# Environment variables (API Keys: Steam Web API, SteamGridDB, IGDB)
+.env
+.env.*
+!.env.example
+
+# ==========================================================
+# 4. FigCraft & Design Temporary Files
+# ==========================================================
+*.figcraft.bak
+*.figcraft~
+*recovered*.figcraft
+temp_*.json
+
+# ==========================================================
+# 5. OS, IDE & Agent Tooling
+# ==========================================================
+# Windows & macOS
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.DS_Store
+
+# Editor / IDE
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# AI & Design Skill State
+.taste-skill/
+.gemini/
