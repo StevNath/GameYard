@@ -254,7 +254,8 @@ Seluruh implementasi CSS wajib mematuhi keputusan desain pada [gameyard.figcraft
 ## 8. Struktur Direktori Project (Rencana Implementasi)
 
 ```text
-d:\Project\AntiGravity\
+D:\Project\GameYard\
+├── README.md                          # Dokumentasi Utama Repositori
 ├── prd.md                             # Dokumen Product Requirements (WHAT & WHY)
 ├── tech-spec.md                       # Dokumen Arsitektur & Spesifikasi Teknis (HOW)
 ├── gameyard.figcraft                  # File Desain UI Utama FigCraft
