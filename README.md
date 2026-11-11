@@ -44,6 +44,8 @@
 | :--- | :--- |
 | [`prd.md`](./prd.md) | **Product Requirements Document (PRD):** Latar belakang masalah, target persona (*Casual User* vs *Multi-Platform Collector*), *user stories*, prioritas fitur MVP vs V2, KPI, dan penanganan *edge cases*. |
 | [`tech-spec.md`](./tech-spec.md) | **Technical Specification & Architecture:** Diagram arsitektur sistem, cara kerja *Auto-Scanner* tiap platform, *sequence diagram* peluncuran & *auto-kill*, skema tabel SQLite, dan kontrak Tauri IPC. |
+| [`design.md`](./design.md) | **Design PRD & UI/UX System Specification:** Anatomi logo `B01-V3`, tabel token warna *Candy-on-Black* & *Light Mode* (dengan *color swatch*), skala tipografi, ukuran koordinat komponen 3-zona, matriks 6 status UI, dan aturan *Anti-Slop*. |
+| [`agent.md`](./agent.md) | **AI Agent & Developer Guidelines:** Panduan instruksi wajib bagi AI coding agent dan developer saat mengimplementasikan frontend maupun backend Rust. |
 | [`gameyard.figcraft`](./gameyard.figcraft) | **Master UI Design (FigCraft):** File desain native FigCraft berisi layar utama *Dark Mode (Candy-on-Black)*, simulasi *Light Mode*, dan catatan *R-31 Design Decision Log*. |
 | [`gameyard-preview.png`](./gameyard-preview.png) | **UI Render Preview:** Ekspor gambar resolusi penuh (`2060x900`) dari kanvas desain FigCraft. |
 | [`gameyard-logo.svg`](./gameyard-logo.svg) | **Brand Logomark (SVG):** Vektor logo resmi **GameYard (B01-V3 Roundhouse 'G+Y' Switchyard)**. |

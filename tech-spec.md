@@ -3,7 +3,7 @@
 | Informasi Dokumen | Detail |
 | :--- | :--- |
 | **Nama Produk** | GameYard (Unified PC Game Launcher & Library Manager) |
-| **Dokumen Terkait** | [Product Requirements Document (prd.md)](./prd.md) |
+| **Dokumen Terkait** | [`prd.md`](./prd.md), [`design.md`](./design.md), [`agent.md`](./agent.md) |
 | **Desain UI & Aset** | [gameyard.figcraft](./gameyard.figcraft) & [gameyard-logo.svg](./gameyard-logo.svg) |
 | **Target Platform** | Windows 10 / 11 (x64) untuk MVP; arsitektur siap diekspansi ke macOS / Linux |
 | **Target Performa** | Idle RAM < 100 MB (Target: ~40-50 MB), Cold Start < 2 detik, Ukuran Installer < 15 MB |
@@ -84,7 +84,9 @@ Salah satu nilai jual utama GameYard (`US-01`) adalah langsung mendeteksi game y
    * `"name"` -> Judul game
    * `"installdir"` -> Nama folder di dalam `steamapps\common\<installdir>`
    * `"SizeOnDisk"` -> Ukuran byte di disk (dikonversi ke GB)
-5. Cari file `.exe` utama di dalam folder instalasi dan ekstrak ikonnya ke `%APPDATA%\GameYard\cache\icons\steam_<appid>.png`.
+5. **Heuristik Pemilihan File `.EXE` Utama (Untuk Ekstraksi Ikon):**
+   * Karena manifest `.acf` Steam hanya menyebutkan nama folder (`installdir`) tanpa nama file `.exe`, pemindai mencari file `.exe` di dalam folder instalasi yang memiliki ukuran byte terbesar sambil mengabaikan *binary* pembantu umum (`UnityCrashHandler`, `UE4PrereqSetup`, `vc_redist`, `dxsetup`, `unins000`, `EasyAntiCheat`).
+   * Ekstrak ikon dari `.exe` terpilih ke `%APPDATA%\GameYard\cache\icons\steam_<appid>.png`.
 
 ### 3.2. Epic Games Store Local Scanner
 1. Baca folder manifest publik Epic Games di:
@@ -111,11 +113,19 @@ Salah satu nilai jual utama GameYard (`US-01`) adalah langsung mendeteksi game y
 2. Jika file `.lnk`, Rust me-resolve target path `.exe` aslinya melalui COM interface `IShellLinkW`.
 3. Rust memanggil `ExtractIconExW` / `SHGetFileInfoW` untuk mengekstrak bitmap ikon beresolusi tertinggi (`256x256` atau `48x48`) dari resource `.exe` dan menyimpannya sebagai PNG lokal.
 
+### 3.5. Strategi Bertahap Sinkronisasi Cloud Library (Game Belum Terinstal)
+* **Semua Game Terinstal (Steam, Epic, Ubisoft, Lokal):** Dideteksi 100% secara lokal tanpa login (Prioritas Utama MVP).
+* **Katalog Cloud Steam (Belum Terinstal):** Menggunakan **Steam Web API resmi** (`IPlayerService/GetOwnedGames`) di fase awal MVP karena stabil dan terdokumentasi resmi.
+* **Katalog Cloud Epic & Ubisoft (Belum Terinstal):** Karena Epic dan Ubisoft tidak memiliki API publik resmi, sinkronisasi katalog cloud yang belum terinstal dijadwalkan pada tahap akhir MVP / V1.1 menggunakan alur *OAuth WebView* terisolasi agar tidak menghambat stabilitas rilis inti.
+
 ---
 
-## 4. Alur Peluncuran 1-Klik, Process Tree Watcher & Smart Auto-Kill
+## 4. Alur Peluncuran 1-Klik, Folder-Path Process Watcher & Smart Auto-Kill
 
 Fitur ini memastikan pengguna cukup menekan satu tombol **Launch** dan RAM PC kembali lega setelah selesai bermain (`US-03`, `US-05`, dan *Edge Case Double Launcher*).
+
+> **Prinsip Teknis Anti-Ribet (Folder-Path Process Watching):**
+> Alih-alih melacak satu PID dari perintah URI (yang rawan putus saat game memakai *double launcher*), Rust memantau **apakah ada proses `.exe` yang sedang berjalan dari dalam direktori `install_dir` game tersebut**. Selama minimal ada 1 proses `.exe` aktif dari folder game itu, sesi bermain dihitung berjalan. Saat 0 proses aktif dari folder tersebut selama 5 detik berturut-turut, sesi dianggap selesai dan klien launcher dimatikan.
 
 ```mermaid
 sequenceDiagram

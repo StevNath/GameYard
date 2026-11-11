@@ -3,7 +3,7 @@
 | Informasi Dokumen | Detail |
 | :--- | :--- |
 | **Nama Produk** | GameYard (Unified PC Game Launcher & Library Manager) |
-| **Dokumen Teknis** | [Technical Specification & Architecture (tech-spec.md)](./tech-spec.md) |
+| **Dokumen Terkait** | [`tech-spec.md`](./tech-spec.md), [`design.md`](./design.md), [`agent.md`](./agent.md) |
 | **Platform Target** | Desktop (Windows 10/11 sebagai prioritas MVP; macOS/Linux untuk fase berikutnya) |
 | **Status** | Draft v1.0 |
 | **Target Rilis** | Q1 (MVP) |
@@ -76,18 +76,20 @@ Target pengguna dibagi menjadi dua segmen utama: **Basic User (Casual Gamer)** d
 Fokus MVP adalah **kecepatan, kemudahan *onboarding*, dan keandalan menjalankan game**.
 
 1. **Auto-Scan Local Games (Zero-Login Onboarding):**
-   * Memindai *registry* dan folder default/custom Windows (`libraryfolders.vdf` di Steam, folder `.egstore` / manifest JSON di Epic, dan *registry* Ubisoft Connect) untuk langsung mendeteksi game yang terinstal tanpa wajib login akun di awal.
-2. **Account Sync (3 Platform Utama):**
-   * Konektor autentikasi aman untuk menarik daftar *uninstalled library* dari **Steam, Epic Games, dan Ubisoft Connect**.
+   * Memindai *registry* dan folder default/custom Windows (`libraryfolders.vdf` di Steam, folder `.egstore` / manifest JSON di Epic, dan *registry* Ubisoft Connect) untuk langsung mendeteksi 100% game yang terinstal tanpa wajib login akun di awal.
+   * Menggunakan filter heuristik untuk mengambil ikon asli dari file `.exe` utama game (mengabaikan file *crash handler* / *redistributable*).
+2. **Account Sync (Strategi Bertahap untuk Uninstalled Cloud Library):**
+   * **MVP Inti:** Konektor **Steam Web API resmi** untuk menarik daftar game Steam yang belum terinstal (*uninstalled cloud library*).
+   * **Tahap Lanjutan (Late MVP / V1.1):** Konektor OAuth untuk katalog *uninstalled* Epic Games dan Ubisoft Connect (mengingat keduanya tidak menyediakan API publik terbuka).
 3. **Unified Library Dashboard:**
-   * Tampilan Grid (Poster otomatis) dan List.
-   * Pencarian instan (*search bar*), filter berdasarkan *Platform* (Steam/Epic/Ubisoft/Lokal) dan *Status* (Installed / Not Installed).
+   * Tampilan *Active Launch Stage* di kiri, *Asymmetric Pinned Quick-Switch* di kanan atas, dan *High-Density Library Index Table* di kanan bawah.
+   * Pencarian instan (*search bar* `[Ctrl+K]`), filter berdasarkan *Platform* (Steam/Epic/Ubisoft/Lokal) dan *Status* (Installed / Not Installed).
    * Pengambilan metadata otomatis (Gambar cover, deskripsi singkat, genre) dari database publik (misal: IGDB / SteamGridDB).
 4. **One-Click Launch & Remote Install Trigger:**
    * Klik **Play** pada game terinstal -> memicu URI/CLI protokol launcher terkait (`steam://rungameid/<id>`, `com.epicgames.launcher://apps/<id>?action=launch`, `uplay://launch/<id>/0`) dan langsung masuk ke game.
    * Klik **Install** pada game yang belum terinstal -> membuka dialog instalasi dari launcher terkait.
-5. **Smart Resource Saver (Auto-Close Client):**
-   * Memantau proses `.exe` game yang sedang berjalan, menghitung durasi sesi bermain (*playtime tracking*), dan otomatis menutup launcher pihak ketiga setelah game ditutup.
+5. **Smart Resource Saver (Folder-Based Process Watcher & Auto-Close Client):**
+   * Memantau proses `.exe` yang berjalan dari dalam folder instalasi game (`install_dir`) sehingga tetap akurat meskipun game menggunakan *double-launcher*, menghitung durasi sesi bermain (*playtime tracking*), dan otomatis menutup launcher pihak ketiga 5 detik setelah game ditutup.
 6. **Manual Game Import:**
    * Fitur *Drag-and-drop* shortcut atau pilih file `.exe` untuk menambahkan game lokal di luar launcher utama.
 
