@@ -266,18 +266,31 @@ Seluruh implementasi CSS wajib mematuhi keputusan desain pada [gameyard.figcraft
 ```text
 D:\Project\GameYard\
 ├── README.md                          # Dokumentasi Utama Repositori
-├── prd.md                             # Dokumen Product Requirements (WHAT & WHY)
-├── tech-spec.md                       # Dokumen Arsitektur & Spesifikasi Teknis (HOW)
-├── gameyard.figcraft                  # File Desain UI Utama FigCraft
-├── gameyard-logo.svg                  # File Master Vector Logo B01-V3 (SVG)
+├── docs/                              # Dokumentasi Produk, Arsitektur & Sistem Desain
+│   ├── prd.md                         # Dokumen Product Requirements (WHAT & WHY)
+│   ├── tech-spec.md                   # Dokumen Arsitektur & Spesifikasi Teknis (HOW)
+│   ├── design.md                      # Dokumen Sistem Desain Candy-on-Black
+│   ├── agent.md                       # Instruksi & Guardrails AI Coding Agent
+│   ├── gameyard.figcraft              # File Desain UI Utama FigCraft
+│   ├── gameyard-preview.png           # Render Preview Desain UI (2060x900)
+│   └── gameyard-logo.svg              # File Master Vector Logo B01-V3 (SVG)
+├── public/                            # Aset Statis Frontend Vite
+│   └── gameyard-logo.svg
 ├── src/                               # Frontend (React 19 + TypeScript + Tailwind)
 │   ├── components/
+│   │   ├── StartupSplash.tsx          # Animasi Startup Turntable Logo B01-V3
+│   │   ├── GameYardLogo.tsx           # Vektor SVG B01-V3 + Indeksasi Rotor
+│   │   ├── GameIconTile.tsx           # Ikon Game 40x40px & Fallback Monogram
 │   │   ├── HeaderCommandBar.tsx       # Logo B01-V3 + Filter [Ctrl+K] + Store Tabs
 │   │   ├── ActiveLaunchStage.tsx      # Panel Kiri (Focal Point + Launch Rules)
 │   │   ├── AsymmetricPinnedShelf.tsx  # Rak 2 Game Prioritas (7 Col + 5 Col)
 │   │   └── LibraryIndexTable.tsx      # Tabel Katalog Virtualized + Ikon 40x40
+│   ├── services/
+│   │   └── tauriBridge.ts             # Jembatan Tauri IPC + Formatter
 │   ├── store/
 │   │   └── useLibraryStore.ts         # Zustand State + Tauri IPC Listeners
+│   ├── types/
+│   │   └── game.ts                    # Kontrak Tipe Data TypeScript
 │   ├── App.tsx
 │   └── main.tsx
 └── src-tauri/                         # Backend Native (Rust)

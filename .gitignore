@@ -5,11 +5,14 @@ node_modules/
 dist/
 dist-ssr/
 .vite/
+*.tsbuildinfo
 *.local
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
+coverage/
 
 # ==========================================================
 # 2. Tauri v2 & Rust Backend (src-tauri)
@@ -24,6 +27,7 @@ src-tauri/WixTools/
 *.dll
 *.exe
 *.msi
+*.nsis
 *.AppImage
 *.deb
 *.dmg
@@ -35,6 +39,7 @@ src-tauri/WixTools/
 *.db
 *.db-shm
 *.db-wal
+*.db-journal
 *.sqlite
 *.sqlite3
 
@@ -80,3 +85,5 @@ $RECYCLE.BIN/
 # AI & Design Skill State
 .taste-skill/
 .gemini/
+.claude/
+.cursor/

@@ -1,0 +1,297 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root,
+[data-theme='dark'] {
+  --gy-bg: #000000;
+  --gy-surface: #0d0d0d;
+  --gy-elevated: #141414;
+  --gy-border: #262626;
+  --gy-ink: #ffffff;
+  --gy-muted: #a3a3a3;
+  --gy-accent: #93f1f7;
+  --gy-accent-ink: #000000;
+  --gy-warning: #f59e0b;
+}
+
+[data-theme='light'] {
+  --gy-bg: #f4f4f0;
+  --gy-surface: #ffffff;
+  --gy-elevated: #eaeae4;
+  --gy-border: #d4d4ce;
+  --gy-ink: #111111;
+  --gy-muted: #4a4a46;
+  --gy-accent: #111111;
+  --gy-accent-ink: #ffffff;
+  --gy-warning: #d97706;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background-color: var(--gy-bg);
+  color: var(--gy-ink);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ==========================================================================
+   GameYard Mechanical Turntable & UI Micro-Animations (MOTION 2)
+   100% GPU-accelerated (transform & opacity only)
+   ========================================================================== */
+
+/* 1. Startup Turntable Rotor Indexing:
+   Spins from -210deg, pauses briefly at Stall 1 (-27deg), then locks into Stall 2 (0deg) */
+@keyframes gy-turntable-boot {
+  0% {
+    transform: rotate(-210deg) scale(0.75);
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  52% {
+    transform: rotate(-27deg) scale(1);
+  }
+  68% {
+    transform: rotate(-27deg) scale(1);
+  }
+  90% {
+    transform: rotate(6deg) scale(1);
+  }
+  100% {
+    transform: rotate(0deg) scale(1);
+    opacity: 1;
+  }
+}
+
+/* 2. Outer 'G' Pit Ring Reveal */
+@keyframes gy-ring-boot {
+  0% {
+    transform: rotate(25deg) scale(0.88);
+    opacity: 0;
+  }
+  45% {
+    transform: rotate(0deg) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: rotate(0deg) scale(1);
+    opacity: 1;
+  }
+}
+
+/* 3. Radial Stalls Staggered Lock-In */
+@keyframes gy-stall-snap {
+  0% {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.06);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* 4. Continuous Mechanical Rotor Spin (used during active drive scan) */
+@keyframes gy-rotor-continuous {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* 5. Stage, Row, Card & Drawer Reveal Animations */
+@keyframes gy-stage-enter {
+  0% {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes gy-row-enter {
+  0% {
+    opacity: 0;
+    transform: translateX(-6px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes gy-card-swap {
+  0% {
+    opacity: 0;
+    transform: scale(0.975) translateY(4px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes gy-drawer-open {
+  0% {
+    opacity: 0;
+    transform: translateY(-6px) scaleY(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scaleY(1);
+  }
+}
+
+@keyframes gy-toast-enter {
+  0% {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes gy-progress-sweep {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(250%);
+  }
+}
+
+/* 6. 5-Second Auto-Kill Grace Period Shrinking Bar */
+@keyframes gy-countdown-shrink {
+  0% {
+    transform: scaleX(1);
+  }
+  100% {
+    transform: scaleX(0);
+  }
+}
+
+.animate-gy-turntable-boot {
+  transform-origin: 14px 14px;
+  animation: gy-turntable-boot 1.15s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.animate-gy-ring-boot {
+  transform-origin: 14px 14px;
+  animation: gy-ring-boot 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-gy-stall-1 {
+  transform-origin: 14px 14px;
+  opacity: 0;
+  animation: gy-stall-snap 0.4s cubic-bezier(0.22, 1, 0.36, 1) 0.18s forwards;
+}
+
+.animate-gy-stall-2 {
+  transform-origin: 14px 14px;
+  opacity: 0;
+  animation: gy-stall-snap 0.4s cubic-bezier(0.22, 1, 0.36, 1) 0.3s forwards;
+}
+
+.animate-gy-stall-3 {
+  transform-origin: 14px 14px;
+  opacity: 0;
+  animation: gy-stall-snap 0.4s cubic-bezier(0.22, 1, 0.36, 1) 0.42s forwards;
+}
+
+.animate-gy-rotor-spin {
+  transform-origin: 14px 14px;
+  animation: gy-rotor-continuous 0.9s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.animate-gy-stage-enter {
+  animation: gy-stage-enter 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-gy-row-enter {
+  opacity: 0;
+  animation: gy-row-enter 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-gy-card-swap {
+  animation: gy-card-swap 0.24s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.animate-gy-drawer-open {
+  transform-origin: top center;
+  animation: gy-drawer-open 0.18s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-gy-toast-enter {
+  animation: gy-toast-enter 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-gy-progress-sweep {
+  animation: gy-progress-sweep 1.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.animate-gy-countdown-shrink {
+  transform-origin: left center;
+  animation: gy-countdown-shrink 5s linear forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-gy-turntable-boot,
+  .animate-gy-ring-boot,
+  .animate-gy-stall-1,
+  .animate-gy-stall-2,
+  .animate-gy-stall-3,
+  .animate-gy-rotor-spin,
+  .animate-gy-stage-enter,
+  .animate-gy-row-enter,
+  .animate-gy-card-swap,
+  .animate-gy-drawer-open,
+  .animate-gy-toast-enter,
+  .animate-gy-progress-sweep,
+  .animate-gy-countdown-shrink {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+/* Utilitarian precision scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--gy-bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--gy-border);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--gy-muted);
+}

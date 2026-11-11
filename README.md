@@ -1,5 +1,5 @@
 <div align="left">
-  <img src="./gameyard-logo.svg" alt="GameYard Logo" width="64" height="64" />
+  <img src="./public/gameyard-logo.svg" alt="GameYard Logo" width="64" height="64" />
   <h1>GAMEYARD</h1>
   <p><strong>Unified Desktop PC Game Launcher &amp; Library Manager</strong></p>
   <p>Satu aplikasi desktop ringan untuk mendeteksi, mengelola, dan langsung menjalankan koleksi game PC dari <strong>Steam, Epic Games Store, Ubisoft Connect, serta file <code>.EXE</code> lokal</strong> tanpa menguras RAM.</p>
@@ -7,7 +7,7 @@
 
 ---
 
-![GameYard Desktop UI Preview](./gameyard-preview.png)
+![GameYard Desktop UI Preview](./docs/gameyard-preview.png)
 
 ---
 
@@ -38,17 +38,37 @@
 
 ---
 
-## Struktur Dokumen & Aset Repositori
+## Struktur Direktori & Dokumen Repositori
+
+```text
+GameYard/
+├── docs/                              # Dokumentasi Produk, Arsitektur & Sistem Desain
+│   ├── prd.md                         # Product Requirements Document (WHAT & WHY)
+│   ├── tech-spec.md                   # Technical Specification & Architecture (HOW)
+│   ├── design.md                      # Visual Bento Design System Board (Candy-on-Black)
+│   ├── agent.md                       # AI Coding Agent & Developer Guardrails
+│   ├── gameyard.figcraft              # File Master Desain UI Native FigCraft
+│   ├── gameyard-preview.png           # Render Preview Resolusi Penuh (2060x900)
+│   └── gameyard-logo.svg              # Master Vector Logo B01-V3 (SVG)
+├── public/                            # Aset Statis Web / Vite
+│   └── gameyard-logo.svg
+├── src/                               # Frontend Application (React 19 + TypeScript)
+│   ├── components/                    # Komponen UI 3-Zona + Animasi Turntable
+│   ├── services/                      # Tauri IPC Bridge & Formatter
+│   ├── store/                         # Zustand State Store
+│   └── types/                         # Kontrak Tipe Data TypeScript
+└── src-tauri/                         # Backend Native Engine (Rust / Tauri v2)
+```
 
 | File | Deskripsi |
 | :--- | :--- |
-| [`prd.md`](./prd.md) | **Product Requirements Document (PRD):** Latar belakang masalah, target persona (*Casual User* vs *Multi-Platform Collector*), *user stories*, prioritas fitur MVP vs V2, KPI, dan penanganan *edge cases*. |
-| [`tech-spec.md`](./tech-spec.md) | **Technical Specification & Architecture:** Diagram arsitektur sistem, cara kerja *Auto-Scanner* tiap platform, *sequence diagram* peluncuran & *auto-kill*, skema tabel SQLite, dan kontrak Tauri IPC. |
-| [`design.md`](./design.md) | **Design PRD & UI/UX System Specification:** Anatomi logo `B01-V3`, tabel token warna *Candy-on-Black* & *Light Mode* (dengan *color swatch*), skala tipografi, ukuran koordinat komponen 3-zona, matriks 6 status UI, dan aturan *Anti-Slop*. |
-| [`agent.md`](./agent.md) | **AI Agent & Developer Guidelines:** Panduan instruksi wajib bagi AI coding agent dan developer saat mengimplementasikan frontend maupun backend Rust. |
-| [`gameyard.figcraft`](./gameyard.figcraft) | **Master UI Design (FigCraft):** File desain native FigCraft berisi layar utama *Dark Mode (Candy-on-Black)*, simulasi *Light Mode*, dan catatan *R-31 Design Decision Log*. |
-| [`gameyard-preview.png`](./gameyard-preview.png) | **UI Render Preview:** Ekspor gambar resolusi penuh (`2060x900`) dari kanvas desain FigCraft. |
-| [`gameyard-logo.svg`](./gameyard-logo.svg) | **Brand Logomark (SVG):** Vektor logo resmi **GameYard (B01-V3 Roundhouse 'G+Y' Switchyard)**. |
+| [`docs/prd.md`](./docs/prd.md) | **Product Requirements Document (PRD):** Latar belakang masalah, target persona (*Casual User* vs *Multi-Platform Collector*), *user stories*, prioritas fitur MVP vs V2, KPI, dan penanganan *edge cases*. |
+| [`docs/tech-spec.md`](./docs/tech-spec.md) | **Technical Specification & Architecture:** Diagram arsitektur sistem, cara kerja *Auto-Scanner* tiap platform, *sequence diagram* peluncuran & *auto-kill*, skema tabel SQLite, dan kontrak Tauri IPC. |
+| [`docs/design.md`](./docs/design.md) | **Design PRD & UI/UX System Specification:** Anatomi logo `B01-V3`, tabel token warna *Candy-on-Black* & *Light Mode* (dengan *color swatch*), skala tipografi, ukuran koordinat komponen 3-zona, matriks 6 status UI, dan aturan *Anti-Slop*. |
+| [`docs/agent.md`](./docs/agent.md) | **AI Agent & Developer Guidelines:** Panduan instruksi wajib bagi AI coding agent dan developer saat mengimplementasikan frontend maupun backend Rust. |
+| [`docs/gameyard.figcraft`](./docs/gameyard.figcraft) | **Master UI Design (FigCraft):** File desain native FigCraft berisi layar utama *Dark Mode (Candy-on-Black)*, simulasi *Light Mode*, dan catatan *R-31 Design Decision Log*. |
+| [`docs/gameyard-preview.png`](./docs/gameyard-preview.png) | **UI Render Preview:** Ekspor gambar resolusi penuh (`2060x900`) dari kanvas desain FigCraft. |
+| [`docs/gameyard-logo.svg`](./docs/gameyard-logo.svg) | **Brand Logomark (SVG):** Vektor logo resmi **GameYard (B01-V3 Roundhouse 'G+Y' Switchyard)**. |
 
 ---
 
@@ -61,10 +81,10 @@
 
 ## Roadmap Pengembangan
 
-- [x] Perumusan PRD & Penanganan Edge Cases ([`prd.md`](./prd.md))
-- [x] Perancangan Arsitektur Sistem & Skema Database ([`tech-spec.md`](./tech-spec.md))
-- [x] Desain UI/UX Sistem & Identitas Logo Vektor ([`gameyard.figcraft`](./gameyard.figcraft) & [`gameyard-logo.svg`](./gameyard-logo.svg))
-- [ ] Inisialisasi Kerangka Project (`Tauri v2 + React + TypeScript + SQLite`)
-- [ ] Implementasi Modul Rust Local Scanner (Steam VDF/ACF, Epic JSON, Ubisoft Registry)
+- [x] Perumusan PRD & Penanganan Edge Cases ([`docs/prd.md`](./docs/prd.md))
+- [x] Perancangan Arsitektur Sistem & Skema Database ([`docs/tech-spec.md`](./docs/tech-spec.md))
+- [x] Desain UI/UX Sistem & Identitas Logo Vektor ([`docs/gameyard.figcraft`](./docs/gameyard.figcraft) & [`docs/gameyard-logo.svg`](./docs/gameyard-logo.svg))
+- [x] Inisialisasi Kerangka Project & UI Shell + Animasi Turntable (`React 19 + TypeScript + Tailwind + Zustand`)
+- [ ] Implementasi Modul Rust Local Scanner & SQLite (`Steam VDF/ACF, Epic JSON, Ubisoft Registry`)
 - [ ] Implementasi Eksekutor URI, Process Tree Watcher & Smart Auto-Kill Client
 - [ ] Integrasi OAuth Account Sync (Uninstalled Cloud Library) & Metadata Cover Fetcher
