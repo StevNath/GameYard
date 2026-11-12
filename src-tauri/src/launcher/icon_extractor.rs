@@ -97,7 +97,7 @@ fn hicon_to_png_base64(hicon: HICON) -> Option<IconData> {
                 biHeight: -(height as i32),
                 biPlanes: 1,
                 biBitCount: 32,
-                biCompression: BI_RGB,
+                biCompression: BI_RGB.0,
                 biSizeImage: 0,
                 biXPelsPerMeter: 0,
                 biYPelsPerMeter: 0,
