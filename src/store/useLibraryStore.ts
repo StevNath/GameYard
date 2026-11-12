@@ -345,13 +345,19 @@ export const useLibraryStore = create<LibraryState>((set, get) => ({
   },
 
   importLocalExe: async (exePath, title) => {
-    const newGame = await ipcImportCustomExe(exePath, title);
-    set((state) => ({
-      games: [newGame, ...state.games],
-      activeGameId: newGame.id,
-      rotorAngle: state.rotorAngle + 120,
-      toastMessage: `Imported local executable: ${newGame.title} (${newGame.executable_path})`,
-    }));
+    try {
+      const newGame = await ipcImportCustomExe(exePath, title);
+      set((state) => ({
+        games: [newGame, ...state.games],
+        activeGameId: newGame.id,
+        rotorAngle: state.rotorAngle + 120,
+        toastMessage: `Imported local executable: ${newGame.title}`,
+      }));
+      await get().fetchGameIcons([newGame.id]);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      set({ toastMessage: `Import failed: ${msg}` });
+    }
   },
 
   fetchGameIcons: async (gameIds?: string[]) => {
