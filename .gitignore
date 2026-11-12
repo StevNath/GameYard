@@ -31,6 +31,8 @@ src-tauri/WixTools/
 *.AppImage
 *.deb
 *.dmg
+*.pfx
+*.cer
 
 # ==========================================================
 # 3. GameYard Local Database, Cache & Secrets
