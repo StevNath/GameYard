@@ -85,6 +85,8 @@ GameYard/
 - [x] Perancangan Arsitektur Sistem & Skema Database ([`docs/tech-spec.md`](./docs/tech-spec.md))
 - [x] Desain UI/UX Sistem & Identitas Logo Vektor ([`docs/gameyard.figcraft`](./docs/gameyard.figcraft) & [`docs/gameyard-logo.svg`](./docs/gameyard-logo.svg))
 - [x] Inisialisasi Kerangka Project & UI Shell + Animasi Turntable (`React 19 + TypeScript + Tailwind + Zustand`)
-- [ ] Implementasi Modul Rust Local Scanner & SQLite (`Steam VDF/ACF, Epic JSON, Ubisoft Registry`)
-- [ ] Implementasi Eksekutor URI, Process Tree Watcher & Smart Auto-Kill Client
+- [x] Implementasi Modul Rust Local Scanner & SQLite (`Steam VDF/ACF, Epic JSON, Ubisoft Registry`)
+- [x] Implementasi Eksekutor URI, Process Tree Watcher & Smart Auto-Kill Client
+- [x] Native `.EXE` Icon Extractor (Win32 API + Cache)
 - [ ] Integrasi OAuth Account Sync (Uninstalled Cloud Library) & Metadata Cover Fetcher
+- [ ] Frontend Integration: 3-Zone UI, Icon Display, Virtualized Table
