@@ -31,6 +31,7 @@ export const ActiveLaunchStage: React.FC = () => {
     'D:\\Games\\HadesII\\Ship\\Hades2.exe'
   );
   const [customExeTitle, setCustomExeTitle] = useState('Hades II');
+  const [importLoading, setImportLoading] = useState(false);
 
   const activeGame = games.find((g) => g.id === activeGameId) || games[0];
 
@@ -64,15 +65,29 @@ export const ActiveLaunchStage: React.FC = () => {
   };
 
   const handlePickExecutable = async () => {
-    const selectedPath = await ipcPickExecutable();
-    if (selectedPath) setCustomExePath(selectedPath);
+    if (importLoading) return;
+    setImportLoading(true);
+    try {
+      const selectedPath = await ipcPickExecutable();
+      if (selectedPath) setCustomExePath(selectedPath);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      useLibraryStore.setState({ toastMessage: `Picker failed: ${msg}` });
+    } finally {
+      setImportLoading(false);
+    }
   };
 
   const handleImportSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!customExePath.trim()) return;
-    await importLocalExe(customExePath.trim(), customExeTitle.trim() || undefined);
-    setShowImportBox(false);
+    if (importLoading || !customExePath.trim()) return;
+    setImportLoading(true);
+    try {
+      await importLocalExe(customExePath.trim(), customExeTitle.trim() || undefined);
+      setShowImportBox(false);
+    } finally {
+      setImportLoading(false);
+    }
   };
 
   return (
@@ -333,16 +348,18 @@ export const ActiveLaunchStage: React.FC = () => {
               <button
                 type="button"
                 onClick={handlePickExecutable}
-                className="min-h-[40px] px-3 rounded-gySm bg-gy-elevated border border-gy-border text-gy-ink text-xs font-semibold hover:border-[#93F1F7] cursor-pointer"
+                disabled={importLoading}
+                className="min-h-[40px] px-3 rounded-gySm bg-gy-elevated border border-gy-border text-gy-ink text-xs font-semibold hover:border-[#93F1F7] disabled:opacity-50 disabled:cursor-wait cursor-pointer"
               >
-                Browse
+                {importLoading ? '...' : 'Browse'}
               </button>
             </div>
             <button
               type="submit"
-              className="w-full min-h-[44px] bg-gy-ink text-gy-bg font-semibold text-xs rounded-gySm active:scale-[0.985] transition-transform cursor-pointer hover:opacity-90"
+              disabled={importLoading}
+              className="w-full min-h-[44px] bg-gy-ink text-gy-bg font-semibold text-xs rounded-gySm active:scale-[0.985] transition-transform disabled:opacity-50 disabled:cursor-wait cursor-pointer hover:opacity-90"
             >
-              Extract Icon &amp; Save to SQLite
+              {importLoading ? 'Importing executable...' : 'Extract Icon & Save to SQLite'}
             </button>
           </form>
         )}
