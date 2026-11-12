@@ -6,7 +6,7 @@ mod launcher;
 mod scanners;
 
 use db::{Database, LaunchResult};
-use launcher::process_watcher;
+use launcher::{process_watcher, icon_extractor};
 use std::collections::HashMap;
 use std::path::Path;
 use std::process::Command;
@@ -158,7 +158,9 @@ fn main() {
             set_auto_kill_rule,
             set_pinned_slot,
             open_install_folder,
-            import_custom_exe
+            import_custom_exe,
+            icon_extractor::get_game_icon,
+            icon_extractor::clear_icon_cache
         ])
         .setup(|app| {
             let database = db::init(app.handle())?;
