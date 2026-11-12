@@ -1,0 +1,27 @@
+[package]
+name = "gameyard"
+version = "0.1.0"
+description = "GameYard Backend Engine"
+authors = ["Steven Nathanael"]
+edition = "2021"
+
+[build-dependencies]
+tauri-build = "2"
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-shell = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+rusqlite = { version = "0.33", features = ["bundled"] }
+winreg = "0.52"
+keyvalues-parser = "0.1"
+sysinfo = "0.33"
+windows = { version = "0.58", features = ["Win32_UI_WindowsAndMessaging", "Win32_Storage_FileSystem", "Win32_System_ProcessStatus", "Win32_UI_Shell", "Win32_Graphics_Gdi"] }
+keyring = "3"
+reqwest = { version = "0.12", features = ["json", "native-tls"] }
+tokio = { version = "1", features = ["full"] }
+
+[features]
+default = [ "custom-protocol" ]
+custom-protocol = [ "tauri/custom-protocol" ]
