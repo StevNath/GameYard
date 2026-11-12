@@ -11,7 +11,7 @@ use std::collections::HashMap;
 use std::path::Path;
 use std::process::Command;
 use std::sync::{Arc, Mutex};
-use tauri::{AppHandle, State};
+use tauri::{AppHandle, Manager, State};
 
 struct LauncherState {
     watchers: Arc<Mutex<HashMap<String, launcher::process_watcher::WatcherHandle>>>,

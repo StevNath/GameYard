@@ -275,7 +275,7 @@ pub fn record_play_session(
         return Err("session duration cannot be negative".to_string());
     }
 
-    let mut connection = db.connection.lock().map_err(|e| e.to_string())?;
+    let connection = db.connection.lock().map_err(|e| e.to_string())?;
     let transaction = connection
         .unchecked_transaction()
         .map_err(|e| e.to_string())?;
