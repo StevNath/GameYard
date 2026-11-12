@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { GameItem, Storefront } from '../types/game';
+import { GameItem, Storefront, IconData } from '../types/game';
 import {
   INITIAL_GAMES,
   ipcCancelLaunch,
@@ -9,6 +9,7 @@ import {
   ipcScanLocalDrives,
   ipcSetAutoKillRule,
   ipcSetPinnedSlot,
+  ipcGetGameIcon,
 } from '../services/tauriBridge';
 
 export type StoreFilter = 'All' | Storefront;
@@ -45,6 +46,7 @@ interface LibraryState {
   assignPinSlot: (gameId: string, slot: 0 | 1 | 2) => Promise<void>;
   openGameFolder: (gameId: string) => Promise<void>;
   importLocalExe: (exePath: string, title?: string) => Promise<void>;
+  fetchGameIcons: (gameIds?: string[]) => Promise<void>;
   clearToast: () => void;
 }
 
@@ -99,6 +101,7 @@ export const useLibraryStore = create<LibraryState>((set, get) => ({
         rotorAngle: state.rotorAngle + 360,
         toastMessage: `Scan complete: ${summary.drives_count} drives indexed (${summary.installed_count} installed games ready)`,
       }));
+      get().fetchGameIcons();
     }, 650);
   },
 
@@ -349,6 +352,25 @@ export const useLibraryStore = create<LibraryState>((set, get) => ({
       rotorAngle: state.rotorAngle + 120,
       toastMessage: `Imported local executable: ${newGame.title} (${newGame.executable_path})`,
     }));
+  },
+
+  fetchGameIcons: async (gameIds?: string[]) => {
+    const targets = gameIds
+      ? get().games.filter((g) => gameIds.includes(g.id))
+      : get().games.filter((g) => g.is_installed && g.executable_path && !g.icon_cache_path);
+
+    for (const game of targets) {
+      if (!game.executable_path) continue;
+      const icon = await ipcGetGameIcon(game.executable_path, true);
+      if (icon) {
+        const dataUrl = `data:image/png;base64,${icon.base64_png}`;
+        set((state) => ({
+          games: state.games.map((g) =>
+            g.id === game.id ? { ...g, icon_cache_path: dataUrl } : g
+          ),
+        }));
+      }
+    }
   },
 
   clearToast: () => set({ toastMessage: null }),

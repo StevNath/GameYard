@@ -52,6 +52,12 @@ export interface LaunchResult {
   message: string;
 }
 
+export interface IconData {
+  base64_png: string;
+  width: number;
+  height: number;
+}
+
 export interface StoreConnection {
   storefront: Storefront;
   account_display_name: string;

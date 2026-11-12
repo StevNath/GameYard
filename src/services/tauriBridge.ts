@@ -1,5 +1,5 @@
 import { invoke } from '@tauri-apps/api/core';
-import { GameItem, LaunchResult, ScanSummary, Storefront } from '../types/game';
+import { GameItem, LaunchResult, ScanSummary, Storefront, IconData } from '../types/game';
 
 const GB = 1024 * 1024 * 1024;
 const HOUR = 3600;
@@ -310,4 +310,17 @@ export function formatBytesToGB(bytes: number): string {
 export function formatPlaytimeHours(seconds: number): string {
   const hours = seconds / HOUR;
   return `${hours.toFixed(1)}h`;
+}
+
+export async function ipcGetGameIcon(exePath: string, large?: boolean): Promise<IconData | null> {
+  if (isTauriRuntime()) {
+    return await invoke<IconData | null>('get_game_icon', { exePath, large });
+  }
+  return null;
+}
+
+export async function ipcClearIconCache(): Promise<void> {
+  if (isTauriRuntime()) {
+    await invoke<void>('clear_icon_cache');
+  }
 }
