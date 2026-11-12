@@ -1,27 +1,21 @@
 use std::path::Path;
-use std::sync::Arc;
-use tauri::AppHandle;
+use std::os::windows::ffi::OsStrExt;
+use tauri::{AppHandle, Manager};
 
 #[cfg(target_os = "windows")]
-use windows::Win32::Graphics::Gdi::{ExtractIconExW, DestroyIcon};
+use windows::Win32::UI::Shell::{ExtractIconExW, SHGetFileInfoW, SHFILEINFOW, SHGFI_ICON, SHGFI_LARGEICON, SHGFI_SMALLICON, SHGFI_FLAGS};
 #[cfg(target_os = "windows")]
-use windows::Win32::UI::Shell::{SHGetFileInfoW, SHFILEINFOW, SHGFI_ICON, SHGFI_LARGEICON, SHGFI_SMALLICON};
+use windows::Win32::UI::WindowsAndMessaging::{DestroyIcon, GetIconInfo, ICONINFO, HICON};
 #[cfg(target_os = "windows")]
-use windows::Win32::Foundation::{HWND, HANDLE, HINSTANCE};
+use windows::Win32::Foundation::HWND;
 #[cfg(target_os = "windows")]
-use windows::Win32::UI::Controls::ImageList_GetIcon;
-#[cfg(target_os = "windows")]
-use windows::Win32::UI::Shell::{SHGetImageList, SHIL_EXTRALARGE};
-#[cfg(target_os = "windows")]
-use windows::Win32::Graphics::Gdi::HBITMAP;
-#[cfg(target_os = "windows")]
-use windows::Win32::Graphics::Gdi::{CreateCompatibleDC, SelectObject, DeleteDC, DeleteObject, GetObjectW, BITMAP};
+use windows::Win32::Graphics::Gdi::{CreateCompatibleDC, SelectObject, DeleteDC, DeleteObject, GetObjectW, GetDC, ReleaseDC, GetDIBits, BITMAP, BITMAPINFO, BITMAPINFOHEADER, RGBQUAD, BI_RGB, DIB_RGB_COLORS};
 #[cfg(target_os = "windows")]
 use windows::Win32::System::Com::{CoInitializeEx, CoUninitialize, COINIT_APARTMENTTHREADED};
 #[cfg(target_os = "windows")]
 use windows::core::PCWSTR;
 
-use image::{ImageBuffer, Rgba};
+use image::{ImageBuffer, Rgba, GenericImageView};
 use base64::{Engine as _, engine::general_purpose};
 
 #[derive(Debug, Clone, serde::Serialize)]
@@ -55,10 +49,10 @@ fn cache_key(exe_path: &Path) -> String {
 }
 
 #[cfg(target_os = "windows")]
-fn hicon_to_png_base64(hicon: HANDLE) -> Option<IconData> {
+fn hicon_to_png_base64(hicon: HICON) -> Option<IconData> {
     unsafe {
-        let mut icon_info = windows::Win32::UI::WindowsAndMessaging::ICONINFO::default();
-        if !windows::Win32::UI::WindowsAndMessaging::GetIconInfo(hicon, &mut icon_info).as_bool() {
+        let mut icon_info: ICONINFO = std::mem::zeroed();
+        if GetIconInfo(hicon, &mut icon_info).is_err() {
             return None;
         }
 
@@ -71,19 +65,19 @@ fn hicon_to_png_base64(hicon: HANDLE) -> Option<IconData> {
             return None;
         }
 
-        let hdc_screen = windows::Win32::Graphics::Gdi::GetDC(HWND(0));
+        let hdc_screen = GetDC(HWND(std::ptr::null_mut()));
         let hdc_mem = CreateCompatibleDC(hdc_screen);
         if hdc_mem.0.is_null() {
-            windows::Win32::Graphics::Gdi::ReleaseDC(HWND(0), hdc_screen);
+            ReleaseDC(HWND(std::ptr::null_mut()), hdc_screen);
             DeleteObject(hbm_color).ok();
             DeleteObject(hbm_mask).ok();
             return None;
         }
 
         let mut bmp: BITMAP = std::mem::zeroed();
-        if GetObjectW(hbm_color, std::mem::size_of::<BITMAP>() as i32, &mut bmp as *mut _ as *mut _).0 == 0 {
+        if GetObjectW(hbm_color, std::mem::size_of::<BITMAP>() as i32, Some(&mut bmp as *mut _ as *mut _)) == 0 {
             DeleteDC(hdc_mem);
-            windows::Win32::Graphics::Gdi::ReleaseDC(HWND(0), hdc_screen);
+            ReleaseDC(HWND(std::ptr::null_mut()), hdc_screen);
             DeleteObject(hbm_color).ok();
             DeleteObject(hbm_mask).ok();
             return None;
@@ -96,36 +90,36 @@ fn hicon_to_png_base64(hicon: HANDLE) -> Option<IconData> {
 
         let mut pixels = vec![0u8; (width * height * 4) as usize];
 
-        let mut bmi = windows::Win32::Graphics::Gdi::BITMAPINFO {
-            bmiHeader: windows::Win32::Graphics::Gdi::BITMAPINFOHEADER {
-                biSize: std::mem::size_of::<windows::Win32::Graphics::Gdi::BITMAPINFOHEADER>() as u32,
+        let mut bmi = BITMAPINFO {
+            bmiHeader: BITMAPINFOHEADER {
+                biSize: std::mem::size_of::<BITMAPINFOHEADER>() as u32,
                 biWidth: width as i32,
                 biHeight: -(height as i32),
                 biPlanes: 1,
                 biBitCount: 32,
-                biCompression: windows::Win32::Graphics::Gdi::BI_RGB.0,
+                biCompression: BI_RGB,
                 biSizeImage: 0,
                 biXPelsPerMeter: 0,
                 biYPelsPerMeter: 0,
                 biClrUsed: 0,
                 biClrImportant: 0,
             },
-            bmiColors: [windows::Win32::Graphics::Gdi::RGBQUAD::default(); 1],
+            bmiColors: [RGBQUAD::default(); 1],
         };
 
-        let lines = windows::Win32::Graphics::Gdi::GetDIBits(
+        let lines = GetDIBits(
             hdc_mem,
             hbm_color,
             0,
             height,
             Some(pixels.as_mut_ptr() as *mut _),
             &mut bmi,
-            windows::Win32::Graphics::Gdi::DIB_RGB_COLORS,
+            DIB_RGB_COLORS,
         );
 
         SelectObject(hdc_mem, hbm_old);
         DeleteDC(hdc_mem);
-        windows::Win32::Graphics::Gdi::ReleaseDC(HWND(0), hdc_screen);
+        ReleaseDC(HWND(std::ptr::null_mut()), hdc_screen);
         DeleteObject(hbm_color).ok();
         DeleteObject(hbm_mask).ok();
 
@@ -168,13 +162,13 @@ pub fn extract_icon(app: &AppHandle, exe_path: &Path, large: bool) -> Option<Ico
     unsafe {
         CoInitializeEx(None, COINIT_APARTMENTTHREADED).ok();
 
-        let mut hicon_large: HANDLE = HANDLE::default();
-        let mut hicon_small: HANDLE = HANDLE::default();
+        let mut hicon_large: HICON = HICON::default();
+        let mut hicon_small: HICON = HICON::default();
         let count = ExtractIconExW(exe_pcwstr, 0, Some(&mut hicon_large), Some(&mut hicon_small), 1);
 
         let hicon = if large { hicon_large } else { hicon_small };
 
-        if count.0 > 0 && !hicon.0.is_null() {
+        if count > 0 && !hicon.0.is_null() {
             let result = hicon_to_png_base64(hicon);
             DestroyIcon(hicon).ok();
             if !hicon_small.0.is_null() && hicon_small != hicon {
@@ -192,10 +186,10 @@ pub fn extract_icon(app: &AppHandle, exe_path: &Path, large: bool) -> Option<Ico
         }
 
         let mut shfi: SHFILEINFOW = std::mem::zeroed();
-        let flags = SHGFI_ICON | if large { SHGFI_LARGEICON } else { SHGFI_SMALLICON };
+        let flags = SHGFI_FLAGS(SHGFI_ICON.0 | if large { SHGFI_LARGEICON.0 } else { SHGFI_SMALLICON.0 });
         let ret = SHGetFileInfoW(
             exe_pcwstr,
-            0,
+            windows::Win32::Storage::FileSystem::FILE_FLAGS_AND_ATTRIBUTES(0),
             Some(&mut shfi),
             std::mem::size_of::<SHFILEINFOW>() as u32,
             flags,
@@ -203,7 +197,7 @@ pub fn extract_icon(app: &AppHandle, exe_path: &Path, large: bool) -> Option<Ico
 
         CoUninitialize();
 
-        if ret.0 != 0 && !shfi.hIcon.0.is_null() {
+        if ret != 0 && !shfi.hIcon.0.is_null() {
             let result = hicon_to_png_base64(shfi.hIcon);
             DestroyIcon(shfi.hIcon).ok();
             if let Some(icon_data) = &result {
