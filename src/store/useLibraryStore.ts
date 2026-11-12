@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { GameItem, Storefront, IconData } from '../types/game';
+import { GameItem, Storefront } from '../types/game';
 import {
   INITIAL_GAMES,
   ipcCancelLaunch,
