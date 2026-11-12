@@ -17,6 +17,21 @@ struct LauncherState {
     watchers: Arc<Mutex<HashMap<String, launcher::process_watcher::WatcherHandle>>>,
 }
 
+fn is_executable_path(path: &Path) -> bool {
+    path.extension()
+        .and_then(|extension| extension.to_str())
+        .is_some_and(|extension| extension.eq_ignore_ascii_case("exe"))
+}
+
+#[tauri::command]
+fn pick_executable() -> Option<String> {
+    rfd::FileDialog::new()
+        .add_filter("Windows executable", &["exe"])
+        .pick_file()
+        .filter(|path| is_executable_path(path))
+        .map(|path| path.to_string_lossy().to_string())
+}
+
 #[tauri::command]
 fn scan_local_drives(
     custom_paths: Option<Vec<String>>,
@@ -147,6 +162,19 @@ fn import_custom_exe(
     db::import_game(&state, Path::new(&exe_path), title.as_deref())
 }
 
+#[cfg(test)]
+mod tests {
+    use super::is_executable_path;
+    use std::path::Path;
+
+    #[test]
+    fn accepts_only_exe_files_for_picker_import() {
+        assert!(is_executable_path(Path::new("C:\\Games\\Hades2.exe")));
+        assert!(!is_executable_path(Path::new("C:\\Games\\readme.txt")));
+        assert!(!is_executable_path(Path::new("C:\\Games\\Hades2")));
+    }
+}
+
 fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
@@ -158,6 +186,7 @@ fn main() {
             set_auto_kill_rule,
             set_pinned_slot,
             open_install_folder,
+            pick_executable,
             import_custom_exe,
             icon_extractor::get_game_icon,
             icon_extractor::clear_icon_cache

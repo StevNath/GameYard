@@ -262,6 +262,13 @@ export async function ipcOpenInstallFolder(gameId: string): Promise<void> {
   }
 }
 
+export async function ipcPickExecutable(): Promise<string | null> {
+  if (isTauriRuntime()) {
+    return await invoke<string | null>('pick_executable');
+  }
+  return null;
+}
+
 export async function ipcImportCustomExe(exePath: string, title?: string): Promise<GameItem> {
   if (isTauriRuntime()) {
     return await invoke<GameItem>('import_custom_exe', { exePath, title });

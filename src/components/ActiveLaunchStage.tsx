@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { useLibraryStore } from '../store/useLibraryStore';
 import { GameIconTile } from './GameIconTile';
-import { formatBytesToGB, formatPlaytimeHours } from '../services/tauriBridge';
+import { formatBytesToGB, formatPlaytimeHours, ipcPickExecutable } from '../services/tauriBridge';
 
 export const ActiveLaunchStage: React.FC = () => {
   const {
@@ -61,6 +61,11 @@ export const ActiveLaunchStage: React.FC = () => {
     if (isUpdateNeeded) return <RefreshCcw className="w-4 h-4" />;
     if (isCloud) return <Download className="w-4 h-4" />;
     return <Play className="w-4 h-4 fill-current" />;
+  };
+
+  const handlePickExecutable = async () => {
+    const selectedPath = await ipcPickExecutable();
+    if (selectedPath) setCustomExePath(selectedPath);
   };
 
   const handleImportSubmit = async (e: React.FormEvent) => {
@@ -317,13 +322,22 @@ export const ActiveLaunchStage: React.FC = () => {
               placeholder="Game Title (e.g. Hades II)"
               className="w-full min-h-[40px] px-3 bg-gy-surface border border-gy-border rounded-gySm text-xs text-gy-ink focus:border-[#93F1F7] focus:outline-none"
             />
-            <input
-              type="text"
-              value={customExePath}
-              onChange={(e) => setCustomExePath(e.target.value)}
-              placeholder="Full .exe path (e.g. D:\Games\Hades2.exe)"
-              className="w-full min-h-[40px] px-3 bg-gy-surface border border-gy-border rounded-gySm font-mono text-xs text-gy-ink focus:border-[#93F1F7] focus:outline-none"
-            />
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={customExePath}
+                onChange={(e) => setCustomExePath(e.target.value)}
+                placeholder="Full .exe path (e.g. D:\Games\Hades2.exe)"
+                className="min-w-0 flex-1 min-h-[40px] px-3 bg-gy-surface border border-gy-border rounded-gySm font-mono text-xs text-gy-ink focus:border-[#93F1F7] focus:outline-none"
+              />
+              <button
+                type="button"
+                onClick={handlePickExecutable}
+                className="min-h-[40px] px-3 rounded-gySm bg-gy-elevated border border-gy-border text-gy-ink text-xs font-semibold hover:border-[#93F1F7] cursor-pointer"
+              >
+                Browse
+              </button>
+            </div>
             <button
               type="submit"
               className="w-full min-h-[44px] bg-gy-ink text-gy-bg font-semibold text-xs rounded-gySm active:scale-[0.985] transition-transform cursor-pointer hover:opacity-90"
