@@ -173,7 +173,7 @@ fn current_timestamp() -> String {
 
 #[cfg(test)]
 mod tests {
-    use super::{is_process_in_install_dir, should_kill_client};
+    use super::{is_process_in_install_dir, should_kill_client, game_exit_grace_elapsed};
     use std::path::Path;
 
     #[test]
