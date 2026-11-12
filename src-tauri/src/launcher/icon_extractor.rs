@@ -31,7 +31,7 @@ fn get_icon_cache_dir(app: &AppHandle) -> std::path::PathBuf {
         .app_data_dir()
         .expect("failed to get app data dir");
     path.push("icons");
-    std::fs::create_dir_all(&path).ok();
+    let _ = std::fs::create_dir_all(&path);
     path
 }
 
@@ -60,8 +60,8 @@ fn hicon_to_png_base64(hicon: HICON) -> Option<IconData> {
         let hbm_mask = icon_info.hbmMask;
 
         if hbm_color.0.is_null() || hbm_mask.0.is_null() {
-            if !hbm_color.0.is_null() { DeleteObject(hbm_color).ok(); }
-            if !hbm_mask.0.is_null() { DeleteObject(hbm_mask).ok(); }
+            if !hbm_color.0.is_null() { let _ = DeleteObject(hbm_color); }
+            if !hbm_mask.0.is_null() { let _ = DeleteObject(hbm_mask); }
             return None;
         }
 
@@ -69,8 +69,8 @@ fn hicon_to_png_base64(hicon: HICON) -> Option<IconData> {
         let hdc_mem = CreateCompatibleDC(hdc_screen);
         if hdc_mem.0.is_null() {
             ReleaseDC(HWND(std::ptr::null_mut()), hdc_screen);
-            DeleteObject(hbm_color).ok();
-            DeleteObject(hbm_mask).ok();
+            let _ = DeleteObject(hbm_color);
+            let _ = DeleteObject(hbm_mask);
             return None;
         }
 
@@ -78,8 +78,8 @@ fn hicon_to_png_base64(hicon: HICON) -> Option<IconData> {
         if GetObjectW(hbm_color, std::mem::size_of::<BITMAP>() as i32, Some(&mut bmp as *mut _ as *mut _)) == 0 {
             DeleteDC(hdc_mem);
             ReleaseDC(HWND(std::ptr::null_mut()), hdc_screen);
-            DeleteObject(hbm_color).ok();
-            DeleteObject(hbm_mask).ok();
+            let _ = DeleteObject(hbm_color);
+            let _ = DeleteObject(hbm_mask);
             return None;
         }
 
@@ -120,8 +120,8 @@ fn hicon_to_png_base64(hicon: HICON) -> Option<IconData> {
         SelectObject(hdc_mem, hbm_old);
         DeleteDC(hdc_mem);
         ReleaseDC(HWND(std::ptr::null_mut()), hdc_screen);
-        DeleteObject(hbm_color).ok();
-        DeleteObject(hbm_mask).ok();
+        let _ = DeleteObject(hbm_color);
+        let _ = DeleteObject(hbm_mask);
 
         if lines == 0 {
             return None;
@@ -160,7 +160,7 @@ pub fn extract_icon(app: &AppHandle, exe_path: &Path, large: bool) -> Option<Ico
     let exe_pcwstr = PCWSTR(exe_wide.as_ptr());
 
     unsafe {
-        CoInitializeEx(None, COINIT_APARTMENTTHREADED).ok();
+        let _ = CoInitializeEx(None, COINIT_APARTMENTTHREADED);
 
         let mut hicon_large: HICON = HICON::default();
         let mut hicon_small: HICON = HICON::default();
@@ -170,17 +170,22 @@ pub fn extract_icon(app: &AppHandle, exe_path: &Path, large: bool) -> Option<Ico
 
         if count > 0 && !hicon.0.is_null() {
             let result = hicon_to_png_base64(hicon);
-            DestroyIcon(hicon).ok();
+            let _ = DestroyIcon(hicon);
             if !hicon_small.0.is_null() && hicon_small != hicon {
-                DestroyIcon(hicon_small).ok();
+                let _ = DestroyIcon(hicon_small);
             }
             if !hicon_large.0.is_null() && hicon_large != hicon {
-                DestroyIcon(hicon_large).ok();
+                let _ = DestroyIcon(hicon_large);
             }
             CoUninitialize();
 
             if let Some(icon_data) = &result {
-                std::fs::write(&cache_path, general_purpose::STANDARD.decode(&icon_data.base64_png).unwrap_or_default()).ok();
+                let _ = std::fs::write(
+                    &cache_path,
+                    general_purpose::STANDARD
+                        .decode(&icon_data.base64_png)
+                        .unwrap_or_default(),
+                );
             }
             return result;
         }
@@ -199,9 +204,14 @@ pub fn extract_icon(app: &AppHandle, exe_path: &Path, large: bool) -> Option<Ico
 
         if ret != 0 && !shfi.hIcon.0.is_null() {
             let result = hicon_to_png_base64(shfi.hIcon);
-            DestroyIcon(shfi.hIcon).ok();
+            let _ = DestroyIcon(shfi.hIcon);
             if let Some(icon_data) = &result {
-                std::fs::write(&cache_path, general_purpose::STANDARD.decode(&icon_data.base64_png).unwrap_or_default()).ok();
+                let _ = std::fs::write(
+                    &cache_path,
+                    general_purpose::STANDARD
+                        .decode(&icon_data.base64_png)
+                        .unwrap_or_default(),
+                );
             }
             return result;
         }
