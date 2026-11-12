@@ -76,7 +76,7 @@ fn hicon_to_png_base64(hicon: HICON) -> Option<IconData> {
 
         let mut bmp: BITMAP = std::mem::zeroed();
         if GetObjectW(hbm_color, std::mem::size_of::<BITMAP>() as i32, Some(&mut bmp as *mut _ as *mut _)) == 0 {
-            DeleteDC(hdc_mem);
+            let _ = DeleteDC(hdc_mem);
             ReleaseDC(HWND(std::ptr::null_mut()), hdc_screen);
             let _ = DeleteObject(hbm_color);
             let _ = DeleteObject(hbm_mask);
@@ -118,7 +118,7 @@ fn hicon_to_png_base64(hicon: HICON) -> Option<IconData> {
         );
 
         SelectObject(hdc_mem, hbm_old);
-        DeleteDC(hdc_mem);
+        let _ = DeleteDC(hdc_mem);
         ReleaseDC(HWND(std::ptr::null_mut()), hdc_screen);
         let _ = DeleteObject(hbm_color);
         let _ = DeleteObject(hbm_mask);
