@@ -10,6 +10,9 @@ pub fn scan_all(custom_paths: Option<&[String]>) -> Vec<DiscoveredGame> {
     games.extend(steam::scan());
     games.extend(epic::scan());
     games.extend(ubisoft::scan());
+    games.extend(gog::scan());
+    games.extend(ea::scan());
+    games.extend(battle_net::scan());
 
     if let Some(paths) = custom_paths {
         for path in paths {
@@ -243,5 +246,141 @@ mod ubisoft {
                 })
             }).collect()
         }
+    }
+}
+
+mod gog {
+    use super::*;
+    use serde::Deserialize;
+
+    #[derive(Debug, Deserialize)]
+    struct GameConfig {
+        #[serde(rename = "gameName")]
+        game_name: String,
+        #[serde(rename = "path")]
+        path: String,
+        #[serde(rename = "exe")]
+        exe: Option<String>,
+    }
+
+    pub fn scan() -> Vec<DiscoveredGame> {
+        #[cfg(not(windows))]
+        { return Vec::new(); }
+        #[cfg(windows)]
+        {
+            let config_path = PathBuf::from(r"C:\ProgramData\GOG.com\Galaxy\config.json");
+            if !config_path.is_file() {
+                return Vec::new();
+            }
+            let text = match fs::read_to_string(&config_path) {
+                Ok(t) => t,
+                Err(_) => return Vec::new(),
+            };
+            let config: serde_json::Value = match serde_json::from_str(&text) {
+                Ok(v) => v,
+                Err(_) => return Vec::new(),
+            };
+
+            let games_array = config["games"].as_array().cloned().unwrap_or_default();
+            games_array.iter().filter_map(|game| {
+                let name = game["gameName"].as_str()?;
+                let path = game["path"].as_str()?;
+                let exe = game["exe"].as_str().or_else(|| game["gameName"].as_str());
+                let install_dir = PathBuf::from(path);
+                let executable = exe
+                    .and_then(|e| install_dir.join(e).is_file().then_some(install_dir.join(e)))
+                    .or_else(|| largest_game_exe(&install_dir));
+
+                Some(DiscoveredGame {
+                    id: format!("gog_{}", stable_id(Path::new(path))),
+                    title: name.to_string(),
+                    storefront: "GOG".to_string(),
+                    external_app_id: stable_id(Path::new(path)),
+                    launch_uri: format!("goggalaxy://launch/{}/0", stable_id(Path::new(path))),
+                    executable_path: executable.map(|path| path.to_string_lossy().to_string()),
+                    install_dir: install_dir.is_dir().then(|| install_dir.to_string_lossy().to_string()),
+                    drive_letter: drive_letter(&install_dir),
+                    size_bytes: 0,
+                })
+            }).collect()
+        }
+    }
+}
+
+mod ea {
+    use super::*;
+
+    pub fn scan() -> Vec<DiscoveredGame> {
+        #[cfg(not(windows))]
+        { return Vec::new(); }
+        #[cfg(windows)]
+        {
+            let paths = [
+                PathBuf::from(r"C:\ProgramData\Electronic Arts\EA Desktop\InstalledGames"),
+                PathBuf::from(r"C:\Program Files (x86)\Origin Games"),
+            ];
+            paths.into_iter().flat_map(|path| scan_dir(&path)).collect()
+        }
+    }
+
+    fn scan_dir(path: &Path) -> Vec<DiscoveredGame> {
+        let Ok(entries) = fs::read_dir(path) else { return Vec::new() };
+        entries.flatten().filter_map(|entry| {
+            let p = entry.path();
+            if !p.is_dir() { return None; }
+            let title = p.file_name()?.to_string_lossy().to_string();
+            let executable = largest_game_exe(&p);
+            Some(DiscoveredGame {
+                id: format!("ea_{}", stable_id(&p)),
+                title: title.clone(),
+                storefront: "EA".to_string(),
+                external_app_id: stable_id(&p),
+                launch_uri: format!("ea://launch/{}", stable_id(&p)),
+                executable_path: executable.map(|path| path.to_string_lossy().to_string()),
+                install_dir: p.is_dir().then(|| p.to_string_lossy().to_string()),
+                drive_letter: drive_letter(&p),
+                size_bytes: 0,
+            })
+        }).collect()
+    }
+}
+
+mod battle_net {
+    use super::*;
+
+    pub fn scan() -> Vec<DiscoveredGame> {
+        #[cfg(not(windows))]
+        { return Vec::new(); }
+        #[cfg(windows)]
+        {
+            let paths = [
+                PathBuf::from(r"C:\Program Files (x86)\Battle.net"),
+                PathBuf::from(r"C:\Program Files\Battle.net"),
+            ];
+            paths.into_iter().flat_map(|path| scan_dir(&path)).collect()
+        }
+    }
+
+    fn scan_dir(path: &Path) -> Vec<DiscoveredGame> {
+        let games_dir = path.join("Games");
+        if !games_dir.is_dir() { return Vec::new(); }
+        let Ok(entries) = fs::read_dir(&games_dir) else { return Vec::new() };
+        entries.flatten().filter_map(|entry| {
+            let p = entry.path();
+            if !p.is_dir() { return None; }
+            let title = p.file_name()?.to_string_lossy().to_string();
+            let executable = largest_game_exe(&p);
+            Some(DiscoveredGame {
+                id: format!("battlenet_{}", stable_id(&p)),
+                title: title.clone(),
+                storefront: "Battle.net".to_string(),
+                external_app_id: stable_id(&p),
+                launch_uri: format!("battlenet://launch/{}", stable_id(&p)),
+                executable_path: executable.map(|path| path.to_string_lossy().to_string()),
+                install_dir: p.is_dir().then(|| p.to_string_lossy().to_string()),
+                drive_letter: drive_letter(&p),
+                size_bytes: 0,
+            })
+        }).collect()
     }
 }

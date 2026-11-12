@@ -1,4 +1,4 @@
-export type Storefront = 'Steam' | 'Epic' | 'Ubisoft' | 'GOG' | 'Local';
+export type Storefront = 'Steam' | 'Epic' | 'Ubisoft' | 'GOG' | 'EA' | 'Battle.net' | 'Local';
 
 export type InstallState =
   | 'ready'

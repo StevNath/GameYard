@@ -425,6 +425,21 @@ fn icon_theme_for(storefront: &str) -> IconTheme {
             border: "#92400E".to_string(),
             text: "#FBBF24".to_string(),
         },
+        "GOG" => IconTheme {
+            bg: "#1A1A2E".to_string(),
+            border: "#4A4AA6".to_string(),
+            text: "#A5B4FC".to_string(),
+        },
+        "EA" => IconTheme {
+            bg: "#1C0B1C".to_string(),
+            border: "#8B1A8B".to_string(),
+            text: "#F0ABFC".to_string(),
+        },
+        "Battle.net" => IconTheme {
+            bg: "#0D1B2A".to_string(),
+            border: "#1B4F72".to_string(),
+            text: "#60A5FA".to_string(),
+        },
         _ => IconTheme {
             bg: "#0F1D22".to_string(),
             border: "#21424D".to_string(),

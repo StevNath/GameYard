@@ -19,6 +19,8 @@ const STALL_ANGLES: Record<Storefront, number> = {
   Epic: 0,
   Ubisoft: 27,
   GOG: -27,
+  EA: 45,
+  'Battle.net': -45,
   Local: 0,
 };
 
