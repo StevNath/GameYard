@@ -1,6 +1,6 @@
 $cert = New-SelfSignedCertificate `
   -Type CodeSigningCert `
-  -Subject "CN=GameYard-Dev" `
+  -Subject "CN=GameYard" `
   -KeyAlgorithm RSA `
   -KeyLength 2048 `
   -CertStoreLocation "Cert:\CurrentUser\My"
