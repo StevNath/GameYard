@@ -38,14 +38,15 @@ async fn scan_local_drives(
     app: AppHandle,
     state: State<'_, Database>,
 ) -> Result<db::ScanSummary, String> {
+    let db = (*state).clone();
     tokio::task::spawn_blocking(move || {
         let paths = custom_paths.as_ref().map(|paths| paths.as_slice());
         let discovered = scanners::scan_all(paths);
         for game in &discovered {
-            let _ = db::upsert_discovered_game(&state, game);
+            let _ = db::upsert_discovered_game(&db, game);
             let _ = app.emit("scan-progress", &game.title);
         }
-        db::scan_summary(&state)
+        db::scan_summary(&db)
     })
     .await
     .map_err(|e| e.to_string())?
