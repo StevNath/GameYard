@@ -127,6 +127,11 @@ fn hicon_to_png_base64(hicon: HICON) -> Option<IconData> {
             return None;
         }
 
+        // Convert BGRA from GetDIBits to RGBA for ImageBuffer
+        for chunk in pixels.chunks_exact_mut(4) {
+            chunk.swap(0, 2);
+        }
+
         let img: ImageBuffer<Rgba<u8>, _> = ImageBuffer::from_raw(width, height, pixels)?;
         let mut buf = Vec::new();
         img.write_to(&mut std::io::Cursor::new(&mut buf), image::ImageFormat::Png).ok()?;
