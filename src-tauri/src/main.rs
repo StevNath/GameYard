@@ -11,7 +11,7 @@ use std::collections::HashMap;
 use std::path::Path;
 use std::process::Command;
 use std::sync::{Arc, Mutex};
-use tauri::{AppHandle, Manager, State};
+use tauri::{AppHandle, Emitter, Manager, State};
 
 struct LauncherState {
     watchers: Arc<Mutex<HashMap<String, launcher::process_watcher::WatcherHandle>>>,
@@ -33,16 +33,23 @@ fn pick_executable() -> Option<String> {
 }
 
 #[tauri::command]
-fn scan_local_drives(
+async fn scan_local_drives(
     custom_paths: Option<Vec<String>>,
+    app: AppHandle,
     state: State<'_, Database>,
 ) -> Result<db::ScanSummary, String> {
-    let paths = custom_paths.as_ref().map(|paths| paths.as_slice());
-    let discovered = scanners::scan_all(paths);
-    for game in &discovered {
-        db::upsert_discovered_game(&state, game)?;
-    }
-    db::scan_summary(&state)
+    let db = (*state).clone();
+    tokio::task::spawn_blocking(move || {
+        let paths = custom_paths.as_ref().map(|paths| paths.as_slice());
+        let discovered = scanners::scan_all(paths);
+        for game in &discovered {
+            let _ = db::upsert_discovered_game(&db, game);
+            let _ = app.emit("scan-progress", &game.title);
+        }
+        db::scan_summary(&db)
+    })
+    .await
+    .map_err(|e| e.to_string())?
 }
 
 #[tauri::command]
