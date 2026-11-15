@@ -36,7 +36,7 @@ src-tauri/WixTools/
 sign-helper.ps1
 sign-all.ps1
 sign-app.ps1
-
+sign-existing.ps1
 # ==========================================================
 # 3. GameYard Local Database, Cache & Secrets
 # ==========================================================
@@ -51,7 +51,7 @@ sign-app.ps1
 # Jangan commit cache ekstraksi ikon .exe dan cover art lokal
 cache/
 covers/
-icons/
+/icons/
 
 # Environment variables (API Keys: Steam Web API, SteamGridDB, IGDB)
 .env
