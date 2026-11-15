@@ -2,7 +2,7 @@ name: GameYard CI
 
 on:
   push:
-    branches: [master]
+    branches: [master, 'issue/**']
   pull_request:
     branches: [master]
   workflow_dispatch:
