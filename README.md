@@ -1,4 +1,5 @@
-# GameYard
+# ![GameYard](/src-tauri/icons/128x128.png) 
+# GameYard 
 
 A lightweight unified PC game launcher for Windows. Built with Tauri v2, Rust, SQLite, React, and TypeScript.
 
