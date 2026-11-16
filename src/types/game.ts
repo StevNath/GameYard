@@ -64,3 +64,8 @@ export interface StoreConnection {
   auth_state: 'connected' | 'expired' | 'disconnected';
   last_synced_at: string | null;
 }
+
+export interface ScanProgress {
+  source: string;
+  games_found: number;
+}

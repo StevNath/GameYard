@@ -33,16 +33,22 @@ fn pick_executable() -> Option<String> {
 }
 
 #[tauri::command]
-fn scan_local_drives(
+async fn scan_local_drives(
     custom_paths: Option<Vec<String>>,
+    app: AppHandle,
     state: State<'_, Database>,
 ) -> Result<db::ScanSummary, String> {
-    let paths = custom_paths.as_ref().map(|paths| paths.as_slice());
-    let discovered = scanners::scan_all(paths);
+    let db = (*state).clone();
+    let discovered = tokio::task::spawn_blocking(move || {
+        scanners::scan_all(custom_paths.as_ref().map(|paths| paths.as_slice()), &app)
+    })
+    .await
+    .map_err(|e| e.to_string())?;
+
     for game in &discovered {
-        db::upsert_discovered_game(&state, game)?;
+        db::upsert_discovered_game(&db, game)?;
     }
-    db::scan_summary(&state)
+    db::scan_summary(&db)
 }
 
 #[tauri::command]

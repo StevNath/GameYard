@@ -10,6 +10,7 @@ import {
   ipcSetAutoKillRule,
   ipcSetPinnedSlot,
   ipcGetGameIcon,
+  listenToScanProgress,
 } from '../services/tauriBridge';
 
 export type StoreFilter = 'All' | Storefront;
@@ -94,7 +95,17 @@ export const useLibraryStore = create<LibraryState>((set, get) => ({
       isScanning: true,
       toastMessage: 'Scanning C:\\, D:\\, E:\\ manifests (Steam/Epic/Ubisoft)...',
     });
+
+    const unlisten = await listenToScanProgress((event) => {
+      const { source, games_found } = event.payload;
+      set((state) => ({
+        toastMessage: `Scanning ${source}... found ${games_found} games`,
+      }));
+    });
+
     const summary = await ipcScanLocalDrives();
+    unlisten.then((fn) => fn?.());
+
     setTimeout(() => {
       set((state) => ({
         games: summary.games,
