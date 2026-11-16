@@ -98,13 +98,13 @@ export const useLibraryStore = create<LibraryState>((set, get) => ({
 
     const unlisten = await listenToScanProgress((event) => {
       const { source, games_found } = event.payload;
-      set((state) => ({
+      set({
         toastMessage: `Scanning ${source}... found ${games_found} games`,
-      }));
+      });
     });
 
     const summary = await ipcScanLocalDrives();
-    unlisten.then((fn) => fn?.());
+    unlisten();
 
     setTimeout(() => {
       set((state) => ({
