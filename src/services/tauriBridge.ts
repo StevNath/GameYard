@@ -1,5 +1,6 @@
 import { invoke } from '@tauri-apps/api/core';
-import { GameItem, LaunchResult, ScanSummary, Storefront, IconData } from '../types/game';
+import { GameItem, LaunchResult, ScanSummary, Storefront, IconData, ScanProgress } from '../types/game';
+import { listen } from '@tauri-apps/api/event';
 
 const GB = 1024 * 1024 * 1024;
 const HOUR = 3600;
@@ -330,4 +331,11 @@ export async function ipcClearIconCache(): Promise<void> {
   if (isTauriRuntime()) {
     await invoke<void>('clear_icon_cache');
   }
+}
+
+export function listenToScanProgress(callback: (event: { payload: ScanProgress }) => void) {
+  if (isTauriRuntime()) {
+    return listen<ScanProgress>('scan-progress', callback);
+  }
+  return Promise.resolve(() => {});
 }
