@@ -90,7 +90,6 @@ src-tauri/              # Rust backend
 | Accent | `#93F1F7` | Primary CTA, active states |
 | Warning | `#F59E0B` | Auth required, updates |
 
-No gradients, no glassmorphism, no em-dashes.
 
 ## License
 
