@@ -57,18 +57,6 @@ npm run build
 npm run tauri build
 ```
 
-### Project Structure
-
-```
-src/                    # React + TypeScript frontend
-src-tauri/              # Rust backend
-  src/
-    main.rs             # Tauri commands & app entry
-    db.rs               # SQLite schema & queries
-    scanners.rs         # Storefront scanners (Steam, Epic, Ubisoft, GOG, EA, Battle.net)
-    launcher/           # Process watcher & icon extractor
-```
-
 ## Architecture
 
 - **Tauri v2** — Native desktop shell with WebView2
