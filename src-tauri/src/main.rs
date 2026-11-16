@@ -38,12 +38,16 @@ async fn scan_local_drives(
     app: AppHandle,
     state: State<'_, Database>,
 ) -> Result<db::ScanSummary, String> {
+    println!("=== scan_local_drives CALLED ===");
     let db = (*state).clone();
+    println!("=== spawn_blocking scanners::scan_all ===");
     let discovered = tokio::task::spawn_blocking(move || {
+        println!("=== INSIDE spawn_blocking closure ===");
         scanners::scan_all(custom_paths.as_ref().map(|paths| paths.as_slice()), &app)
     })
     .await
     .map_err(|e| e.to_string())?;
+    println!("=== spawn_blocking completed, {} games discovered ===", discovered.len());
 
     for game in &discovered {
         db::upsert_discovered_game(&db, game)?;
@@ -182,6 +186,12 @@ mod tests {
 }
 
 fn main() {
+    println!("=== GAMEYARD STARTING ===");
+    tracing_subscriber::fmt()
+        .with_max_level(tracing::Level::DEBUG)
+        .init();
+    println!("=== TRACING INITIALIZED ===");
+
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
         .invoke_handler(tauri::generate_handler![

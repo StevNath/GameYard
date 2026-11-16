@@ -205,9 +205,16 @@ export function isTauriRuntime(): boolean {
 }
 
 export async function ipcScanLocalDrives(customPaths?: string[]): Promise<ScanSummary> {
-  if (isTauriRuntime()) {
-    return await invoke<ScanSummary>('scan_local_drives', { customPaths });
+  console.log('=== ipcScanLocalDrives CALLED ===');
+  const isTauri = isTauriRuntime();
+  console.log('=== isTauriRuntime:', isTauri, '===');
+  if (isTauri) {
+    console.log('=== About to invoke scan_local_drives ===');
+    const result = await invoke<ScanSummary>('scan_local_drives', { customPaths });
+    console.log('=== invoke returned:', result, '===');
+    return result;
   }
+  console.log('=== Returning mock data (not Tauri runtime) ===');
   return {
     drives_count: 3,
     installed_count: INITIAL_GAMES.filter((g) => g.is_installed).length,
