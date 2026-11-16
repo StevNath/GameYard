@@ -409,17 +409,6 @@ mod ubisoft {
 
 mod gog {
     use super::*;
-    use serde::Deserialize;
-
-    #[derive(Debug, Deserialize)]
-    struct GameConfig {
-        #[serde(rename = "gameName")]
-        game_name: String,
-        #[serde(rename = "path")]
-        path: String,
-        #[serde(rename = "exe")]
-        exe: Option<String>,
-    }
 
     pub fn scan() -> Vec<DiscoveredGame> {
         #[cfg(not(windows))]
