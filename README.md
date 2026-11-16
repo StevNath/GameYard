@@ -36,11 +36,6 @@ GameYard consolidates games from Steam, Epic Games, Ubisoft Connect, GOG Galaxy,
 
 Download the latest installer from [Releases](https://github.com/StevNath/GameYard/releases).
 
-> **Note:** The installer is unsigned. Windows Smart App Control may block it. Options:
-> - Run on a VM or secondary PC without Smart App Control
-> - Use the browser preview: `npm run dev`
-> - For production distribution, a code signing certificate is required
-
 ## Development
 
 ```bash
