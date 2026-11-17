@@ -1,5 +1,5 @@
 import { invoke } from '@tauri-apps/api/core';
-import { GameItem, LaunchResult, ScanSummary, Storefront, IconData, ScanProgress } from '../types/game';
+import { GameItem, LaunchResult, ScanSummary, Storefront, IconData, ScanProgress, CustomScanPath } from '../types/game';
 import { listen } from '@tauri-apps/api/event';
 
 const GB = 1024 * 1024 * 1024;
@@ -338,6 +338,48 @@ export async function ipcClearIconCache(): Promise<void> {
   if (isTauriRuntime()) {
     await invoke<void>('clear_icon_cache');
   }
+}
+
+export async function ipcAddCustomScanPath(path: string): Promise<number> {
+  if (isTauriRuntime()) {
+    return await invoke<number>('add_custom_scan_path', { path });
+  }
+  return 0;
+}
+
+export async function ipcRemoveCustomScanPath(id: number): Promise<boolean> {
+  if (isTauriRuntime()) {
+    return await invoke<boolean>('remove_custom_scan_path', { id });
+  }
+  return true;
+}
+
+export async function ipcListCustomScanPaths(): Promise<CustomScanPath[]> {
+  if (isTauriRuntime()) {
+    return await invoke<CustomScanPath[]>('list_custom_scan_paths');
+  }
+  return [];
+}
+
+export async function ipcSetCustomScanPathEnabled(id: number, enabled: boolean): Promise<boolean> {
+  if (isTauriRuntime()) {
+    return await invoke<boolean>('set_custom_scan_path_enabled', { id, enabled });
+  }
+  return enabled;
+}
+
+export async function ipcUpdateGameLocation(gameId: string, exePath: string): Promise<GameItem> {
+  if (isTauriRuntime()) {
+    return await invoke<GameItem>('update_game_location', { gameId, exePath });
+  }
+  throw new Error('Not in Tauri runtime');
+}
+
+export async function ipcDeleteGame(gameId: string): Promise<boolean> {
+  if (isTauriRuntime()) {
+    return await invoke<boolean>('delete_game', { gameId });
+  }
+  return true;
 }
 
 export function listenToScanProgress(callback: (event: { payload: ScanProgress }) => void) {
