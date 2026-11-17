@@ -10,6 +10,8 @@ import {
   Download,
   RefreshCcw,
   Timer,
+  Trash2,
+  Edit3,
 } from 'lucide-react';
 import { useLibraryStore } from '../store/useLibraryStore';
 import { GameIconTile } from './GameIconTile';
@@ -24,6 +26,8 @@ export const ActiveLaunchStage: React.FC = () => {
     assignPinSlot,
     openGameFolder,
     importLocalExe,
+    updateGameLocation,
+    deleteGame,
   } = useLibraryStore();
 
   const [showImportBox, setShowImportBox] = useState(false);
@@ -75,6 +79,19 @@ export const ActiveLaunchStage: React.FC = () => {
       useLibraryStore.setState({ toastMessage: `Picker failed: ${msg}` });
     } finally {
       setImportLoading(false);
+    }
+  };
+
+  const handleEditActiveGameLocation = async () => {
+    const selectedPath = await ipcPickExecutable();
+    if (selectedPath) {
+      await updateGameLocation(activeGame.id, selectedPath);
+    }
+  };
+
+  const handleDeleteActiveGame = async () => {
+    if (confirm(`Remove ${activeGame.title} from library? (App will not be deleted)`)) {
+      await deleteGame(activeGame.id);
     }
   };
 
@@ -365,7 +382,7 @@ export const ActiveLaunchStage: React.FC = () => {
         )}
       </div>
 
-      {/* Bottom 2 Utility Buttons (190x44 each) */}
+      {/* Bottom Utility Buttons */}
       <div className="grid grid-cols-2 gap-3 pt-4 border-t border-gy-border mt-4">
         <button
           type="button"
@@ -383,6 +400,24 @@ export const ActiveLaunchStage: React.FC = () => {
         >
           <FilePlus2 className="w-3.5 h-3.5 text-[#93F1F7]" />
           <span>Import Local .EXE</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={handleEditActiveGameLocation}
+          className="min-h-[44px] px-3 rounded-gySm bg-gy-elevated border border-gy-border text-gy-ink hover:border-[#93F1F7] active:scale-[0.98] text-xs font-semibold flex items-center justify-center gap-2 cursor-pointer transition-all"
+        >
+          <Edit3 className="w-3.5 h-3.5 text-[#93F1F7]" />
+          <span>Edit .EXE Location</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={handleDeleteActiveGame}
+          className="min-h-[44px] px-3 rounded-gySm bg-gy-elevated border border-gy-border text-gy-ink hover:border-red-500 hover:text-red-400 active:scale-[0.98] text-xs font-semibold flex items-center justify-center gap-2 cursor-pointer transition-all"
+        >
+          <Trash2 className="w-3.5 h-3.5 text-red-400" />
+          <span>Remove from Library</span>
         </button>
       </div>
     </aside>

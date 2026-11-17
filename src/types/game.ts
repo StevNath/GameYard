@@ -69,3 +69,10 @@ export interface ScanProgress {
   source: string;
   games_found: number;
 }
+
+export interface CustomScanPath {
+  id: number;
+  path: string;
+  enabled: boolean;
+  created_at: string;
+}

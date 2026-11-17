@@ -64,6 +64,14 @@ pub struct LaunchResult {
     pub message: String,
 }
 
+#[derive(Debug, Serialize)]
+pub struct CustomScanPath {
+    pub id: i64,
+    pub path: String,
+    pub enabled: bool,
+    pub created_at: String,
+}
+
 #[derive(Debug, Clone)]
 pub struct DiscoveredGame {
     pub id: String,
@@ -123,6 +131,12 @@ pub fn init(app: &AppHandle) -> Result<Database, String> {
                  account_display_name TEXT,
                  auth_state TEXT NOT NULL DEFAULT 'disconnected',
                  last_synced_at TEXT
+             );
+             CREATE TABLE IF NOT EXISTS custom_scan_paths (
+                 id INTEGER PRIMARY KEY AUTOINCREMENT,
+                 path TEXT NOT NULL UNIQUE,
+                 enabled INTEGER NOT NULL DEFAULT 1,
+                 created_at TEXT NOT NULL
              );
              CREATE INDEX IF NOT EXISTS idx_games_storefront ON games(storefront);
              CREATE INDEX IF NOT EXISTS idx_games_last_played ON games(last_played_at DESC);
@@ -448,6 +462,121 @@ fn icon_theme_for(storefront: &str) -> IconTheme {
     }
 }
 
+pub fn add_custom_scan_path(db: &Database, path: &str) -> Result<i64, String> {
+    let clean_path = path.trim();
+    if clean_path.is_empty() {
+        return Err("path cannot be empty".to_string());
+    }
+
+    let connection = db.connection.lock().map_err(|e| e.to_string())?;
+    connection
+        .execute(
+            "INSERT INTO custom_scan_paths (path, enabled, created_at) VALUES (?1, 1, ?2)",
+            params![clean_path, now_timestamp()],
+        )
+        .map_err(|e| e.to_string())?;
+
+    Ok(connection.last_insert_rowid())
+}
+
+pub fn remove_custom_scan_path(db: &Database, id: i64) -> Result<bool, String> {
+    let connection = db.connection.lock().map_err(|e| e.to_string())?;
+    let affected = connection
+        .execute(
+            "DELETE FROM custom_scan_paths WHERE id = ?1",
+            params![id],
+        )
+        .map_err(|e| e.to_string())?;
+
+    Ok(affected > 0)
+}
+
+pub fn list_custom_scan_paths(db: &Database) -> Result<Vec<CustomScanPath>, String> {
+    let connection = db.connection.lock().map_err(|e| e.to_string())?;
+    let mut stmt = connection
+        .prepare("SELECT id, path, enabled, created_at FROM custom_scan_paths ORDER BY id ASC")
+        .map_err(|e| e.to_string())?;
+
+    let rows = stmt
+        .query_map([], |row| {
+            Ok(CustomScanPath {
+                id: row.get(0)?,
+                path: row.get(1)?,
+                enabled: row.get::<_, i64>(2)? != 0,
+                created_at: row.get(3)?,
+            })
+        })
+        .map_err(|e| e.to_string())?;
+
+    let mut paths = Vec::new();
+    for row in rows {
+        paths.push(row.map_err(|e| e.to_string())?);
+    }
+    Ok(paths)
+}
+
+pub fn set_custom_scan_path_enabled(
+    db: &Database,
+    id: i64,
+    enabled: bool,
+) -> Result<bool, String> {
+    let connection = db.connection.lock().map_err(|e| e.to_string())?;
+    let affected = connection
+        .execute(
+            "UPDATE custom_scan_paths SET enabled = ?1 WHERE id = ?2",
+            params![enabled as i64, id],
+        )
+        .map_err(|e| e.to_string())?;
+
+    Ok(affected > 0)
+}
+
+pub fn delete_game(db: &Database, game_id: &str) -> Result<bool, String> {
+    let connection = db.connection.lock().map_err(|e| e.to_string())?;
+    let affected = connection
+        .execute("DELETE FROM games WHERE id = ?1", params![game_id])
+        .map_err(|e| e.to_string())?;
+
+    Ok(affected > 0)
+}
+
+pub fn update_game_location(
+    db: &Database,
+    game_id: &str,
+    exe_path: &Path,
+) -> Result<GameItem, String> {
+    if !exe_path.is_file() {
+        return Err("executable file does not exist".to_string());
+    }
+
+    let mut game = get_game(db, game_id)?.ok_or_else(|| "game not found".to_string())?;
+
+    let path_string = exe_path.to_string_lossy().to_string();
+    let install_dir = exe_path.parent().map(|path| path.to_path_buf());
+
+    game.launch_uri = path_string.clone();
+    game.executable_path = Some(path_string);
+    game.install_dir = install_dir.as_ref().map(|path| path.to_string_lossy().to_string());
+    game.drive_letter = drive_letter(exe_path);
+
+    // Recalculate size
+    game.size_bytes = if let Some(ref dir) = install_dir {
+        super::scanners::calculate_folder_size(dir)
+    } else {
+        fs::metadata(exe_path)
+            .map(|m| m.len() as i64)
+            .unwrap_or_default()
+    };
+
+    // Clear icon cache to force re-extraction from new executable
+    game.icon_cache_path = None;
+
+    game.updated_at = now_timestamp();
+
+    insert_game(db, &game)?;
+    Ok(game)
+}
+
 pub fn import_game(
     db: &Database,
     exe_path: &Path,
@@ -546,6 +675,12 @@ mod tests {
                     started_at TEXT NOT NULL,
                     ended_at TEXT NOT NULL,
                     duration_seconds INTEGER NOT NULL
+                );
+                CREATE TABLE custom_scan_paths (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    path TEXT NOT NULL UNIQUE,
+                    enabled INTEGER NOT NULL DEFAULT 1,
+                    created_at TEXT NOT NULL
                 );",
             )
             .expect("create test schema");
@@ -586,5 +721,57 @@ mod tests {
         assert_eq!(session, ("100".to_string(), "145".to_string(), 45));
         assert_eq!(game.0, 45);
         assert_eq!(game.1, "145");
+    }
+
+    #[test]
+    fn custom_scan_paths_crud_works() {
+        let connection = Connection::open_in_memory().expect("open test database");
+        connection
+            .execute_batch(
+                "CREATE TABLE custom_scan_paths (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    path TEXT NOT NULL UNIQUE,
+                    enabled INTEGER NOT NULL DEFAULT 1,
+                    created_at TEXT NOT NULL
+                );",
+            )
+            .expect("create test schema");
+
+        let database = Database {
+            connection: Arc::new(Mutex::new(connection)),
+        };
+
+        // Add
+        let id1 = super::add_custom_scan_path(&database, "D:\\Games\\Custom")
+            .expect("add path 1");
+        assert_eq!(id1, 1);
+
+        let id2 = super::add_custom_scan_path(&database, "E:\\Emulators")
+            .expect("add path 2");
+        assert_eq!(id2, 2);
+
+        // List
+        let paths = super::list_custom_scan_paths(&database).expect("list paths");
+        assert_eq!(paths.len(), 2);
+        assert_eq!(paths[0].path, "D:\\Games\\Custom");
+        assert!(paths[0].enabled);
+        assert_eq!(paths[1].path, "E:\\Emulators");
+        assert!(paths[1].enabled);
+
+        // Toggle enabled
+        let toggled = super::set_custom_scan_path_enabled(&database, id1, false)
+            .expect("disable path");
+        assert!(toggled);
+
+        let paths_after_toggle = super::list_custom_scan_paths(&database).expect("list paths");
+        assert!(!paths_after_toggle[0].enabled);
+
+        // Remove
+        let removed = super::remove_custom_scan_path(&database, id2).expect("remove path");
+        assert!(removed);
+
+        let paths_after_remove = super::list_custom_scan_paths(&database).expect("list paths");
+        assert_eq!(paths_after_remove.len(), 1);
+        assert_eq!(paths_after_remove[0].id, id1);
     }
 }

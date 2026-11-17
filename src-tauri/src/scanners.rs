@@ -87,6 +87,15 @@ fn scan_custom_path(path: &Path) -> Vec<DiscoveredGame> {
                 continue;
             }
             let install_dir = candidate.parent().map(Path::to_path_buf);
+            let size_bytes = install_dir
+                .as_ref()
+                .map(|dir| calculate_folder_size(dir))
+                .unwrap_or_else(|| {
+                    fs::metadata(&candidate)
+                        .map(|metadata| metadata.len() as i64)
+                        .unwrap_or_default()
+                });
+
             games.push(DiscoveredGame {
                 id: format!("local_{}", stable_id(&candidate)),
                 title: title.to_string(),
@@ -96,17 +105,17 @@ fn scan_custom_path(path: &Path) -> Vec<DiscoveredGame> {
                 executable_path: Some(candidate.to_string_lossy().to_string()),
                 drive_letter: drive_letter(&candidate),
                 install_dir: install_dir.map(|path| path.to_string_lossy().to_string()),
-                size_bytes: fs::metadata(&candidate)
-                    .map(|metadata| metadata.len() as i64)
-                    .unwrap_or_default(),
+                size_bytes,
             });
         } else if candidate.is_dir() {
             // Support game library folder 1 level below custom_path
-            if let Some(exe) = largest_game_exe(&candidate) {
+            if let Some(exe) = find_best_game_exe(&candidate) {
                 let Some(title) = candidate.file_name().and_then(|value| value.to_str()) else {
                     continue;
                 };
                 let install_dir = Some(candidate.to_path_buf());
+                let size_bytes = calculate_folder_size(&candidate);
+
                 games.push(DiscoveredGame {
                     id: format!("local_{}", stable_id(&candidate)),
                     title: title.to_string(),
@@ -116,9 +125,7 @@ fn scan_custom_path(path: &Path) -> Vec<DiscoveredGame> {
                     executable_path: Some(exe.to_string_lossy().to_string()),
                     drive_letter: drive_letter(&candidate),
                     install_dir: install_dir.map(|path| path.to_string_lossy().to_string()),
-                    size_bytes: fs::metadata(&exe)
-                        .map(|metadata| metadata.len() as i64)
-                        .unwrap_or_default(),
+                    size_bytes,
                 });
             }
         }
@@ -140,11 +147,57 @@ fn drive_letter(path: &Path) -> Option<String> {
         .then(|| text[..3].to_uppercase())
 }
 
-fn largest_game_exe(install_dir: &Path) -> Option<PathBuf> {
-    tracing::debug!("largest_game_exe scanning: {:?}", install_dir);
+pub fn calculate_folder_size(dir: &Path) -> i64 {
+    const MAX_DEPTH: usize = 5;
+    let mut total_size: u64 = 0;
+    let mut stack = vec![(dir.to_path_buf(), 0)];
+
+    while let Some((directory, depth)) = stack.pop() {
+        if depth > MAX_DEPTH {
+            continue;
+        }
+        let entries = match fs::read_dir(&directory) {
+            Ok(entries) => entries,
+            Err(_) => continue,
+        };
+
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.is_dir() {
+                stack.push((path, depth + 1));
+            } else if path.is_file() {
+                if let Ok(metadata) = entry.metadata() {
+                    total_size += metadata.len();
+                }
+            }
+        }
+    }
+    total_size as i64
+}
+
+fn find_best_game_exe(install_dir: &Path) -> Option<PathBuf> {
+    tracing::debug!("find_best_game_exe scanning: {:?}", install_dir);
     const MAX_DEPTH: usize = 3;
-    let mut best: Option<(u64, PathBuf)> = None;
-    // Stack holds (path, depth)
+
+    let folder_name = install_dir
+        .file_name()
+        .and_then(|v| v.to_str())
+        .unwrap_or("")
+        .to_ascii_lowercase();
+
+    let folder_name_simplified = folder_name
+        .replace([' ', '-', '_', '.'], "")
+        .replace("game", "")
+        .replace("games", "");
+
+    struct ExeCandidate {
+        path: PathBuf,
+        size: u64,
+        name_score: i32,
+        is_launcher: bool,
+    }
+
+    let mut candidates: Vec<ExeCandidate> = Vec::new();
     let mut stack = vec![(install_dir.to_path_buf(), 0)];
     let mut dirs_scanned = 0;
     let mut files_checked = 0;
@@ -174,31 +227,80 @@ fn largest_game_exe(install_dir: &Path) -> Option<PathBuf> {
             let Some(name) = path.file_name().and_then(|value| value.to_str()) else {
                 continue;
             };
-            if !name.to_ascii_lowercase().ends_with(".exe") || ignored_executable(name) {
+            let name_lower = name.to_ascii_lowercase();
+            if !name_lower.ends_with(".exe") || ignored_executable(name) {
                 continue;
             }
+
+            let exe_stem = name.strip_suffix(".exe").unwrap_or(name);
+            let exe_stem_lower = exe_stem.to_ascii_lowercase();
+
+            // Check if this looks like a launcher/utility/system component
+            let is_launcher = [
+                "launcher", "updater", "patch", "install", "uninstall", "setup",
+                "config", "settings", "tool", "utility", "helper", "service",
+                "agent", "daemon", "manager", "bootstrapper", "patcher",
+                "plugin", "sys", "hyp", "crash", "reporter", "bgm", "cef",
+                "web", "browser", "host", "overlay", "wrapper", "useless",
+                "questr", "global", "system", "runtime", "redist",
+            ].iter().any(|kw| exe_stem_lower.contains(kw));
+
+            // Calculate name similarity score
+            let exe_simplified = exe_stem_lower
+                .replace([' ', '-', '_', '.'], "")
+                .replace("game", "")
+                .replace("games", "");
+
+            let name_score = if exe_simplified == folder_name_simplified {
+                1000 // Exact match
+            } else if exe_simplified.contains(&folder_name_simplified) || folder_name_simplified.contains(&exe_simplified) {
+                500 // Partial match
+            } else if folder_name_simplified.is_empty() {
+                0
+            } else {
+                // Levenshtein-like similarity
+                let common = exe_simplified.chars().filter(|c| folder_name_simplified.contains(*c)).count();
+                (common as i32 * 100) / (exe_simplified.len().max(folder_name_simplified.len()) as i32).max(1)
+            };
+
             let size = entry.metadata().map(|metadata| metadata.len()).unwrap_or_default();
-            if best.as_ref().is_none_or(|(best_size, _)| size > *best_size) {
-                best = Some((size, path));
-            }
+            candidates.push(ExeCandidate { path, size, name_score, is_launcher });
         }
     }
+
+    // Sort by: non-launcher first (false < true), then highest name_score, then largest size
+    candidates.sort_by(|a, b| {
+        a.is_launcher.cmp(&b.is_launcher)
+            .then_with(|| b.name_score.cmp(&a.name_score))
+            .then_with(|| b.size.cmp(&a.size))
+    });
+
     tracing::debug!(
-        "largest_game_exe complete for {:?}: scanned {} dirs, checked {} files, found: {:?}",
+        "find_best_game_exe complete for {:?}: scanned {} dirs, checked {} files, candidates: {}, best: {:?}",
         install_dir,
         dirs_scanned,
         files_checked,
-        best.as_ref().map(|(_, p)| p)
+        candidates.len(),
+        candidates.first().map(|c| &c.path)
     );
-    best.map(|(_, path)| path)
+
+    candidates.first().map(|c| c.path.clone())
+}
+
+fn largest_game_exe(install_dir: &Path) -> Option<PathBuf> {
+    // Alias for backward compatibility
+    find_best_game_exe(install_dir)
 }
 
 fn is_skipped_asset_dir(name: &str) -> bool {
     let lower = name.to_ascii_lowercase();
     matches!(
         lower.as_str(),
-        "data" | "assets" | "content" | "mods" | "textures" | "audio" | "movies" | "locales" | "engine"
-    )
+        "data" | "assets" | "content" | "mods" | "textures" | "audio" | "movies"
+            | "locales" | "engine" | "plugins" | "launcherplugins" | "redist"
+            | "support" | "installers" | "tools" | "webcache" | "cef" | "mono"
+            | "hyp_questr" | "useless_sys"
+    ) || lower.contains("plugin") || lower.contains("launcher")
 }
 
 fn ignored_executable(name: &str) -> bool {
