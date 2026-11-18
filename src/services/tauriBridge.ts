@@ -389,6 +389,13 @@ export async function ipcUninstallGame(gameId: string): Promise<string> {
   throw new Error('Not in Tauri runtime');
 }
 
+export async function ipcUpdateGameIcon(gameId: string, iconPath: string): Promise<boolean> {
+  if (isTauriRuntime()) {
+    return await invoke<boolean>('update_game_icon', { gameId, iconPath });
+  }
+  return false;
+}
+
 export function listenToScanProgress(callback: (event: { payload: ScanProgress }) => void) {
   if (isTauriRuntime()) {
     return listen<ScanProgress>('scan-progress', callback);

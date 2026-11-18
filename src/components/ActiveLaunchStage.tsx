@@ -40,7 +40,23 @@ export const ActiveLaunchStage: React.FC = () => {
 
   const activeGame = games.find((g) => g.id === activeGameId) || games[0];
 
-  if (!activeGame) return null;
+  if (!activeGame) {
+    return (
+      <aside className="w-full lg:w-[440px] bg-gy-surface border-r border-gy-border p-6 flex flex-col justify-center items-center shrink-0 select-none">
+        <div className="text-center space-y-4 animate-gy-stage-enter">
+          <div className="w-16 h-16 rounded-full bg-gy-elevated border border-gy-border flex items-center justify-center mx-auto mb-4">
+            <Terminal className="w-8 h-8 text-gy-muted" />
+          </div>
+          <h2 className="font-display font-bold text-lg text-gy-ink tracking-tight uppercase">
+            No Game Selected
+          </h2>
+          <p className="font-mono text-xs text-gy-muted max-w-[240px] mx-auto">
+            Your library is empty. Start by scanning local drives to discover installed games.
+          </p>
+        </div>
+      </aside>
+    );
+  }
 
   const isRunningOrStarting =
     activeGame.install_state === 'starting' || activeGame.install_state === 'running';

@@ -278,6 +278,17 @@ pub fn set_pin(db: &Database, game_id: &str, slot: i64) -> Result<bool, String> 
     Ok(changed == 1)
 }
 
+pub fn update_game_icon(db: &Database, game_id: &str, icon_path: &str) -> Result<bool, String> {
+    let connection = db.connection.lock().map_err(|e| e.to_string())?;
+    let changed = connection
+        .execute(
+            "UPDATE games SET icon_cache_path = ?1, updated_at = ?2 WHERE id = ?3",
+            params![icon_path, now_timestamp(), game_id],
+        )
+        .map_err(|e| e.to_string())?;
+    Ok(changed == 1)
+}
+
 pub fn record_play_session(
     db: &Database,
     game_id: &str,
@@ -591,14 +602,10 @@ pub fn update_game_location(
     game.install_dir = install_dir.as_ref().map(|path| path.to_string_lossy().to_string());
     game.drive_letter = drive_letter(exe_path);
 
-    // Recalculate size
-    game.size_bytes = if let Some(ref dir) = install_dir {
-        super::scanners::calculate_folder_size(dir)
-    } else {
-        fs::metadata(exe_path)
-            .map(|m| m.len() as i64)
-            .unwrap_or_default()
-    };
+    // Recalculate size from executable
+    game.size_bytes = fs::metadata(exe_path)
+        .map(|m| m.len() as i64)
+        .unwrap_or_default();
 
     // Clear icon cache to force re-extraction from new executable
     game.icon_cache_path = None;

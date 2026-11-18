@@ -148,7 +148,7 @@ export const LibraryIndexTable: React.FC = () => {
       label = 'Install via Steam';
       btnClass = 'bg-gy-bg border-gy-border text-gy-muted hover:text-gy-ink';
     } else if (game.storefront === 'Local') {
-      label = 'Run .EXE';
+      label = 'Launch';
     }
 
     return (
@@ -256,77 +256,73 @@ export const LibraryIndexTable: React.FC = () => {
                   {/* Col 3: Honest Execution States */}
                   <div className="col-span-2">{renderStatusCell(game)}</div>
 
-                  {/* Col 4: Action Button + Three-dot Menu */}
+                  {/* Col 4: Action Button + Three-dot Menu (Accordion Style) */}
                   <div className="col-span-2 flex items-center justify-end gap-2">
                     {renderActionButton(game)}
-                    <div className="relative">
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setActiveMenuGameId(activeMenuGameId === game.id ? null : game.id);
-                        }}
-                        className="p-2 rounded-gySm bg-gy-elevated border border-gy-border text-gy-muted hover:text-gy-ink hover:border-gy-ink transition-colors cursor-pointer"
-                        title="Game Options"
-                      >
-                        <MoreHorizontal className="w-4 h-4" />
-                      </button>
-
-                      {activeMenuGameId === game.id && (
-                        <>
-                          <div
-                            className="fixed inset-0 z-40"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setActiveMenuGameId(null);
-                            }}
-                          />
-                          <div className="absolute right-0 bottom-full mb-2 w-48 rounded-gySm bg-gy-surface border border-gy-border shadow-2xl z-50 py-1 font-sans text-xs">
-                            <button
-                              type="button"
-                              onClick={(e) => handleUpdateLocation(game.id, e)}
-                              className="w-full text-left px-3 py-2 text-gy-ink hover:bg-gy-elevated transition-colors flex items-center gap-2 cursor-pointer"
-                            >
-                              <span>Change Location (.exe)</span>
-                            </button>
-                            <button
-                              type="button"
-                              onClick={async (e) => {
-                                e.stopPropagation();
-                                setActiveMenuGameId(null);
-                                if (confirm(`Remove ${game.title} from list? (Files will not be deleted)`)) {
-                                  await deleteGame(game.id);
-                                }
-                              }}
-                              className="w-full text-left px-3 py-2 text-gy-muted hover:bg-gy-elevated transition-colors flex items-center gap-2 cursor-pointer border-t border-gy-border"
-                            >
-                              <span>Remove from List</span>
-                            </button>
-                            <button
-                              type="button"
-                              onClick={async (e) => {
-                                e.stopPropagation();
-                                setActiveMenuGameId(null);
-                                if (confirm(`Uninstall ${game.title}? This will DELETE all game files from disk. This action cannot be undone.`)) {
-                                  await uninstallGame(game.id);
-                                }
-                              }}
-                              className="w-full text-left px-3 py-2 text-red-500 hover:bg-gy-elevated transition-colors flex items-center gap-2 cursor-pointer border-t border-gy-border"
-                            >
-                              <span>Uninstall Game (Delete Files)</span>
-                            </button>
-                          </div>
-                        </>
-                      )}
-                    </div>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActiveMenuGameId(activeMenuGameId === game.id ? null : game.id);
+                      }}
+                      className="p-2 rounded-gySm bg-gy-elevated border border-gy-border text-gy-muted hover:text-gy-ink hover:border-gy-ink transition-colors cursor-pointer"
+                      title="Game Options"
+                    >
+                      <MoreHorizontal className="w-4 h-4" />
+                    </button>
                   </div>
-                </div>
+                  {/* Accordion Menu Row */}
+                  {activeMenuGameId === game.id && (
+                    <div className="col-span-12 px-5 pb-3 animate-gy-row-enter">
+                      <div className="ml-auto w-[200px] rounded-gySm bg-gy-surface border border-gy-border py-1 font-sans text-xs">
+                        <button
+                          type="button"
+                          onClick={(e) => handleUpdateLocation(game.id, e)}
+                          className="w-full text-left px-3 py-2 text-gy-ink hover:bg-gy-elevated transition-colors flex items-center gap-2 cursor-pointer"
+                        >
+                          <span>Change Location (.exe)</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            setActiveMenuGameId(null);
+                            if (confirm(`Remove ${game.title} from list? (Files will not be deleted)`)) {
+                              await deleteGame(game.id);
+                            }
+                          }}
+                          className="w-full text-left px-3 py-2 text-gy-muted hover:bg-gy-elevated transition-colors flex items-center gap-2 cursor-pointer border-t border-gy-border"
+                        >
+                          <span>Remove from List</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            setActiveMenuGameId(null);
+                            if (confirm(`Uninstall ${game.title}? This will DELETE all game files from disk. This action cannot be undone.`)) {
+                              await uninstallGame(game.id);
+                            }
+                          }}
+                          className="w-full text-left px-3 py-2 text-red-500 hover:bg-gy-elevated transition-colors flex items-center gap-2 cursor-pointer border-t border-gy-border"
+                        >
+                          <span>Uninstall Game (Delete Files)</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+            </div> 
               );
             })}
           </div>
         ) : (
-          <div className="p-8 text-center font-mono text-xs text-gy-muted">
-            No games matched filter "{searchQuery || selectedStorefront}".
+          <div className="p-8 text-center">
+            <h3 className="font-sans font-bold text-sm text-gy-ink mb-1">
+              Library is Empty
+            </h3>
+            <p className="font-mono text-xs text-gy-muted">
+              Start by scanning local drives to discover games.
+            </p>
           </div>
         )}
       </div>

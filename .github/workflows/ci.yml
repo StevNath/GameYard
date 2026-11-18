@@ -39,12 +39,12 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            src-tauri/target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('src-tauri/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cargo-
+                  ~/.cargo/registry
+                  ~/.cargo/git
+                  src-tauri/target
+                key: ${{ runner.os }}-cargo-v2-${{ hashFiles('src-tauri/Cargo.lock', 'src-tauri/icons/**') }}
+                restore-keys: |
+                  ${{ runner.os }}-cargo-v2-
 
       - name: Check Rust backend
         run: cargo check --locked

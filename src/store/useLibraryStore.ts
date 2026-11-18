@@ -1,15 +1,16 @@
 import { create } from 'zustand';
 import { GameItem, Storefront, CustomScanPath } from '../types/game';
 import {
-  INITIAL_GAMES,
   ipcCancelLaunch,
   ipcImportCustomExe,
   ipcLaunchGame,
   ipcOpenInstallFolder,
   ipcScanLocalDrives,
+  ipcGetLibraryIndex,
   ipcSetAutoKillRule,
   ipcSetPinnedSlot,
   ipcGetGameIcon,
+  ipcUpdateGameIcon,
   listenToScanProgress,
   ipcAddCustomScanPath,
   ipcRemoveCustomScanPath,
@@ -45,6 +46,7 @@ interface LibraryState {
   toastMessage: string | null;
   customScanPaths: CustomScanPath[];
   isCustomPathsModalOpen: boolean;
+  initializeLibrary: () => Promise<void>;
   setActiveGame: (gameId: string) => void;
   setSelectedStorefront: (storefront: StoreFilter) => void;
   setSearchQuery: (query: string) => void;
@@ -72,8 +74,8 @@ interface LibraryState {
 }
 
 export const useLibraryStore = create<LibraryState>((set, get) => ({
-  games: INITIAL_GAMES,
-  activeGameId: INITIAL_GAMES[0].id,
+  games: [],
+  activeGameId: '',
   selectedStorefront: 'All',
   searchQuery: '',
   theme: 'dark',
@@ -84,6 +86,19 @@ export const useLibraryStore = create<LibraryState>((set, get) => ({
   toastMessage: null,
   customScanPaths: [],
   isCustomPathsModalOpen: false,
+
+  initializeLibrary: async () => {
+    try {
+      const games = await ipcGetLibraryIndex();
+      set({
+        games,
+        activeGameId: games.length > 0 ? games[0].id : ''
+      });
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      set({ toastMessage: `Failed to load library: ${msg}` });
+    }
+  },
 
   setActiveGame: (gameId) => {
     const idx = get().games.findIndex((g) => g.id === gameId);
@@ -129,6 +144,7 @@ export const useLibraryStore = create<LibraryState>((set, get) => ({
     setTimeout(() => {
       set((state) => ({
         games: summary.games,
+        activeGameId: summary.games.length > 0 ? summary.games[0].id : '',
         drivesCount: summary.drives_count,
         isScanning: false,
         rotorAngle: state.rotorAngle + 360,
@@ -403,6 +419,7 @@ export const useLibraryStore = create<LibraryState>((set, get) => ({
       const icon = await ipcGetGameIcon(game.executable_path, true);
       if (icon) {
         const dataUrl = `data:image/png;base64,${icon.base64_png}`;
+        await ipcUpdateGameIcon(game.id, dataUrl);
         set((state) => ({
           games: state.games.map((g) =>
             g.id === game.id ? { ...g, icon_cache_path: dataUrl } : g
