@@ -17,8 +17,8 @@ export default {
         },
       },
       fontFamily: {
-        display: ['Poppins', 'Inter', 'sans-serif'],
-        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
+        display: ['Poppins', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        sans: ['ui-sans-serif', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],
         mono: ['JetBrains Mono', 'Liberation Mono', 'Consolas', 'monospace'],
       },
       borderRadius: {
