@@ -311,7 +311,7 @@ export const LibraryIndexTable: React.FC = () => {
                       </div>
                     </div>
                   )}
-            </div> 
+                </div>
               );
             })}
           </div>
