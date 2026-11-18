@@ -16,6 +16,7 @@ export const LibraryIndexTable: React.FC = () => {
     importLocalExe,
     updateGameLocation,
     deleteGame,
+    uninstallGame,
   } = useLibraryStore();
 
   const [activeMenuGameId, setActiveMenuGameId] = useState<string | null>(null);
@@ -293,13 +294,26 @@ export const LibraryIndexTable: React.FC = () => {
                               onClick={async (e) => {
                                 e.stopPropagation();
                                 setActiveMenuGameId(null);
-                                if (confirm(`Remove ${game.title} from library? (App will not be deleted)`)) {
+                                if (confirm(`Remove ${game.title} from list? (Files will not be deleted)`)) {
                                   await deleteGame(game.id);
                                 }
                               }}
-                              className="w-full text-left px-3 py-2 text-red-400 hover:bg-gy-elevated transition-colors flex items-center gap-2 cursor-pointer border-t border-gy-border"
+                              className="w-full text-left px-3 py-2 text-gy-muted hover:bg-gy-elevated transition-colors flex items-center gap-2 cursor-pointer border-t border-gy-border"
                             >
-                              <span>Remove from Library</span>
+                              <span>Remove from List</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={async (e) => {
+                                e.stopPropagation();
+                                setActiveMenuGameId(null);
+                                if (confirm(`Uninstall ${game.title}? This will DELETE all game files from disk. This action cannot be undone.`)) {
+                                  await uninstallGame(game.id);
+                                }
+                              }}
+                              className="w-full text-left px-3 py-2 text-red-500 hover:bg-gy-elevated transition-colors flex items-center gap-2 cursor-pointer border-t border-gy-border"
+                            >
+                              <span>Uninstall Game (Delete Files)</span>
                             </button>
                           </div>
                         </>

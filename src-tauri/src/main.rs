@@ -242,6 +242,14 @@ fn delete_game(
     db::delete_game(&state, &game_id)
 }
 
+#[tauri::command]
+fn uninstall_game(
+    game_id: String,
+    state: State<'_, Database>,
+) -> Result<String, String> {
+    db::uninstall_game(&state, &game_id)
+}
+
 #[cfg(test)]
 mod tests {
     use super::is_executable_path;
@@ -281,7 +289,8 @@ fn main() {
             icon_extractor::get_game_icon,
             icon_extractor::clear_icon_cache,
             update_game_location,
-            delete_game
+            delete_game,
+            uninstall_game
         ])
         .setup(|app| {
             let database = db::init(app.handle())?;

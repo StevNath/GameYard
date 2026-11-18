@@ -17,6 +17,7 @@ import {
   ipcSetCustomScanPathEnabled,
   ipcUpdateGameLocation,
   ipcDeleteGame,
+  ipcUninstallGame,
 } from '../services/tauriBridge';
 
 export type StoreFilter = 'All' | Storefront;
@@ -65,6 +66,7 @@ interface LibraryState {
   setCustomScanPathEnabled: (id: number, enabled: boolean) => Promise<void>;
   updateGameLocation: (gameId: string, exePath: string) => Promise<void>;
   deleteGame: (gameId: string) => Promise<void>;
+  uninstallGame: (gameId: string) => Promise<void>;
   openCustomPathsModal: () => void;
   closeCustomPathsModal: () => void;
 }
@@ -483,6 +485,22 @@ export const useLibraryStore = create<LibraryState>((set, get) => ({
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       set({ toastMessage: `Failed to delete game: ${msg}` });
+    }
+  },
+
+  uninstallGame: async (gameId: string) => {
+    try {
+      const result = await ipcUninstallGame(gameId);
+      set((state) => ({
+        games: state.games.filter((g) => g.id !== gameId),
+        activeGameId: state.activeGameId === gameId && state.games.length > 1
+          ? state.games.find((g) => g.id !== gameId)?.id || state.games[0].id
+          : state.activeGameId,
+        toastMessage: result,
+      }));
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      set({ toastMessage: `Failed to uninstall game: ${msg}` });
     }
   },
 

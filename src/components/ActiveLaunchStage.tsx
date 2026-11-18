@@ -28,6 +28,7 @@ export const ActiveLaunchStage: React.FC = () => {
     importLocalExe,
     updateGameLocation,
     deleteGame,
+    uninstallGame,
   } = useLibraryStore();
 
   const [showImportBox, setShowImportBox] = useState(false);
@@ -90,8 +91,14 @@ export const ActiveLaunchStage: React.FC = () => {
   };
 
   const handleDeleteActiveGame = async () => {
-    if (confirm(`Remove ${activeGame.title} from library? (App will not be deleted)`)) {
+    if (confirm(`Remove ${activeGame.title} from list? (Files will not be deleted)`)) {
       await deleteGame(activeGame.id);
+    }
+  };
+
+  const handleUninstallActiveGame = async () => {
+    if (confirm(`Uninstall ${activeGame.title}? This will DELETE all game files from disk. This action cannot be undone.`)) {
+      await uninstallGame(activeGame.id);
     }
   };
 
@@ -414,10 +421,19 @@ export const ActiveLaunchStage: React.FC = () => {
         <button
           type="button"
           onClick={handleDeleteActiveGame}
-          className="min-h-[44px] px-3 rounded-gySm bg-gy-elevated border border-gy-border text-gy-ink hover:border-red-500 hover:text-red-400 active:scale-[0.98] text-xs font-semibold flex items-center justify-center gap-2 cursor-pointer transition-all"
+          className="min-h-[44px] px-3 rounded-gySm bg-gy-elevated border border-gy-border text-gy-muted hover:border-gy-muted hover:text-gy-ink active:scale-[0.98] text-xs font-semibold flex items-center justify-center gap-2 cursor-pointer transition-all"
+        >
+          <Trash2 className="w-3.5 h-3.5" />
+          <span>Remove from List</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={handleUninstallActiveGame}
+          className="col-span-2 min-h-[44px] px-3 rounded-gySm bg-gy-elevated border border-gy-border text-gy-ink hover:border-red-500 hover:text-red-400 active:scale-[0.98] text-xs font-semibold flex items-center justify-center gap-2 cursor-pointer transition-all"
         >
           <Trash2 className="w-3.5 h-3.5 text-red-400" />
-          <span>Remove from Library</span>
+          <span>Uninstall Game (Delete Files)</span>
         </button>
       </div>
     </aside>

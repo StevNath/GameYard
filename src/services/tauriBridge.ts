@@ -382,6 +382,13 @@ export async function ipcDeleteGame(gameId: string): Promise<boolean> {
   return true;
 }
 
+export async function ipcUninstallGame(gameId: string): Promise<string> {
+  if (isTauriRuntime()) {
+    return await invoke<string>('uninstall_game', { gameId });
+  }
+  throw new Error('Not in Tauri runtime');
+}
+
 export function listenToScanProgress(callback: (event: { payload: ScanProgress }) => void) {
   if (isTauriRuntime()) {
     return listen<ScanProgress>('scan-progress', callback);

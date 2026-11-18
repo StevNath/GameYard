@@ -540,6 +540,38 @@ pub fn delete_game(db: &Database, game_id: &str) -> Result<bool, String> {
     Ok(affected > 0)
 }
 
+pub fn uninstall_game(db: &Database, game_id: &str) -> Result<String, String> {
+    // Get game details first
+    let game = get_game(db, game_id)?.ok_or_else(|| "game not found".to_string())?;
+
+    // Determine what to delete
+    let install_dir = game.install_dir.as_ref().ok_or_else(|| "no install directory found for this game".to_string())?;
+
+    // Safety check: ensure path exists
+    let dir_path = Path::new(install_dir);
+    if !dir_path.exists() {
+        return Err(format!("install directory does not exist: {}", install_dir));
+    }
+
+    // Additional safety: ensure it's not a system directory
+    let install_dir_lower = install_dir.to_lowercase();
+    if install_dir_lower == "c:\\"
+        || install_dir_lower == "c:\\windows"
+        || install_dir_lower == "c:\\program files"
+        || install_dir_lower == "c:\\program files (x86)"
+        || install_dir_lower.starts_with("c:\\windows\\") {
+        return Err("cannot delete system directories".to_string());
+    }
+
+    // Delete the game directory from disk
+    fs::remove_dir_all(dir_path).map_err(|e| format!("failed to delete game files: {}", e))?;
+
+    // Remove from database
+    delete_game(db, game_id)?;
+
+    Ok(format!("Successfully uninstalled {} and deleted files from {}", game.title, install_dir))
+}
+
 pub fn update_game_location(
     db: &Database,
     game_id: &str,
