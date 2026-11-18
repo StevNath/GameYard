@@ -171,6 +171,15 @@ fn set_pinned_slot(
 }
 
 #[tauri::command]
+fn update_game_icon(
+    game_id: String,
+    icon_path: String,
+    state: State<'_, Database>,
+) -> Result<bool, String> {
+    db::update_game_icon(&state, &game_id, &icon_path)
+}
+
+#[tauri::command]
 fn open_install_folder(game_id: String, state: State<'_, Database>) -> Result<(), String> {
     let game = db::get_game(&state, &game_id)?.ok_or_else(|| "game not found".to_string())?;
     let install_dir = game
@@ -290,7 +299,8 @@ fn main() {
             icon_extractor::clear_icon_cache,
             update_game_location,
             delete_game,
-            uninstall_game
+            uninstall_game,
+            update_game_icon
         ])
         .setup(|app| {
             let database = db::init(app.handle())?;
