@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { GameItem, Storefront } from '../types/game';
+import { GameItem, Storefront, CustomScanPath } from '../types/game';
 import {
   INITIAL_GAMES,
   ipcCancelLaunch,
@@ -11,6 +11,13 @@ import {
   ipcSetPinnedSlot,
   ipcGetGameIcon,
   listenToScanProgress,
+  ipcAddCustomScanPath,
+  ipcRemoveCustomScanPath,
+  ipcListCustomScanPaths,
+  ipcSetCustomScanPathEnabled,
+  ipcUpdateGameLocation,
+  ipcDeleteGame,
+  ipcUninstallGame,
 } from '../services/tauriBridge';
 
 export type StoreFilter = 'All' | Storefront;
@@ -36,6 +43,8 @@ interface LibraryState {
   isBooting: boolean;
   rotorAngle: number;
   toastMessage: string | null;
+  customScanPaths: CustomScanPath[];
+  isCustomPathsModalOpen: boolean;
   setActiveGame: (gameId: string) => void;
   setSelectedStorefront: (storefront: StoreFilter) => void;
   setSearchQuery: (query: string) => void;
@@ -51,6 +60,15 @@ interface LibraryState {
   importLocalExe: (exePath: string, title?: string) => Promise<void>;
   fetchGameIcons: (gameIds?: string[]) => Promise<void>;
   clearToast: () => void;
+  loadCustomScanPaths: () => Promise<void>;
+  addCustomScanPath: (path: string) => Promise<void>;
+  removeCustomScanPath: (id: number) => Promise<void>;
+  setCustomScanPathEnabled: (id: number, enabled: boolean) => Promise<void>;
+  updateGameLocation: (gameId: string, exePath: string) => Promise<void>;
+  deleteGame: (gameId: string) => Promise<void>;
+  uninstallGame: (gameId: string) => Promise<void>;
+  openCustomPathsModal: () => void;
+  closeCustomPathsModal: () => void;
 }
 
 export const useLibraryStore = create<LibraryState>((set, get) => ({
@@ -64,6 +82,8 @@ export const useLibraryStore = create<LibraryState>((set, get) => ({
   isBooting: true,
   rotorAngle: 0,
   toastMessage: null,
+  customScanPaths: [],
+  isCustomPathsModalOpen: false,
 
   setActiveGame: (gameId) => {
     const idx = get().games.findIndex((g) => g.id === gameId);
@@ -393,4 +413,98 @@ export const useLibraryStore = create<LibraryState>((set, get) => ({
   },
 
   clearToast: () => set({ toastMessage: null }),
+
+  loadCustomScanPaths: async () => {
+    try {
+      const paths = await ipcListCustomScanPaths();
+      set({ customScanPaths: paths });
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      set({ toastMessage: `Failed to load custom paths: ${msg}` });
+    }
+  },
+
+  addCustomScanPath: async (path: string) => {
+    try {
+      await ipcAddCustomScanPath(path);
+      await get().loadCustomScanPaths();
+      set({ toastMessage: `Added custom scan path: ${path}` });
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      set({ toastMessage: `Failed to add path: ${msg}` });
+    }
+  },
+
+  removeCustomScanPath: async (id: number) => {
+    try {
+      await ipcRemoveCustomScanPath(id);
+      await get().loadCustomScanPaths();
+      set({ toastMessage: 'Removed custom scan path' });
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      set({ toastMessage: `Failed to remove path: ${msg}` });
+    }
+  },
+
+  setCustomScanPathEnabled: async (id: number, enabled: boolean) => {
+    try {
+      await ipcSetCustomScanPathEnabled(id, enabled);
+      await get().loadCustomScanPaths();
+      set({ toastMessage: enabled ? 'Enabled custom scan path' : 'Disabled custom scan path' });
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      set({ toastMessage: `Failed to toggle path: ${msg}` });
+    }
+  },
+
+  updateGameLocation: async (gameId: string, exePath: string) => {
+    try {
+      const updatedGame = await ipcUpdateGameLocation(gameId, exePath);
+      set((state) => ({
+        games: state.games.map((g) => (g.id === gameId ? updatedGame : g)),
+        toastMessage: `Updated location for ${updatedGame.title}`,
+      }));
+      // Fetch icon for the updated game since location changed
+      await get().fetchGameIcons([gameId]);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      set({ toastMessage: `Failed to update location: ${msg}` });
+    }
+  },
+
+  deleteGame: async (gameId: string) => {
+    try {
+      await ipcDeleteGame(gameId);
+      set((state) => ({
+        games: state.games.filter((g) => g.id !== gameId),
+        activeGameId: state.activeGameId === gameId && state.games.length > 1
+          ? state.games.find((g) => g.id !== gameId)?.id || state.games[0].id
+          : state.activeGameId,
+        toastMessage: 'Removed game from library',
+      }));
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      set({ toastMessage: `Failed to delete game: ${msg}` });
+    }
+  },
+
+  uninstallGame: async (gameId: string) => {
+    try {
+      const result = await ipcUninstallGame(gameId);
+      set((state) => ({
+        games: state.games.filter((g) => g.id !== gameId),
+        activeGameId: state.activeGameId === gameId && state.games.length > 1
+          ? state.games.find((g) => g.id !== gameId)?.id || state.games[0].id
+          : state.activeGameId,
+        toastMessage: result,
+      }));
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      set({ toastMessage: `Failed to uninstall game: ${msg}` });
+    }
+  },
+
+  openCustomPathsModal: () => set({ isCustomPathsModalOpen: true }),
+
+  closeCustomPathsModal: () => set({ isCustomPathsModalOpen: false }),
 }));

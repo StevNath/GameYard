@@ -24,6 +24,15 @@ fn is_executable_path(path: &Path) -> bool {
 }
 
 #[tauri::command]
+fn update_game_location(
+    game_id: String,
+    exe_path: String,
+    state: State<'_, Database>,
+) -> Result<db::GameItem, String> {
+    db::update_game_location(&state, &game_id, Path::new(&exe_path))
+}
+
+#[tauri::command]
 fn pick_executable() -> Option<String> {
     rfd::FileDialog::new()
         .add_filter("Windows executable", &["exe"])
@@ -40,19 +49,40 @@ async fn scan_local_drives(
 ) -> Result<db::ScanSummary, String> {
     println!("=== scan_local_drives CALLED ===");
     let db = (*state).clone();
+
+    // Load saved custom scan paths from database
+    let saved_paths = db::list_custom_scan_paths(&db)?;
+    let enabled_saved_paths: Vec<String> = saved_paths
+        .into_iter()
+        .filter(|p| p.enabled)
+        .map(|p| p.path)
+        .collect();
+
+    // Merge with custom_paths parameter
+    let mut all_custom_paths = enabled_saved_paths;
+    if let Some(extra_paths) = custom_paths {
+        all_custom_paths.extend(extra_paths);
+    }
+
+    let final_custom_paths = if all_custom_paths.is_empty() {
+        None
+    } else {
+        Some(all_custom_paths)
+    };
+
     println!("=== spawn_blocking scanners::scan_all ===");
     let discovered = tokio::task::spawn_blocking(move || {
         println!("=== INSIDE spawn_blocking closure ===");
-        scanners::scan_all(custom_paths.as_ref().map(|paths| paths.as_slice()), &app)
+        scanners::scan_all(final_custom_paths.as_ref().map(|paths| paths.as_slice()), &app)
     })
     .await
     .map_err(|e| e.to_string())?;
     println!("=== spawn_blocking completed, {} games discovered ===", discovered.len());
 
     for game in &discovered {
-        db::upsert_discovered_game(&db, game)?;
+        db::upsert_discovered_game(&state, game)?;
     }
-    db::scan_summary(&db)
+    db::scan_summary(&state)
 }
 
 #[tauri::command]
@@ -172,6 +202,54 @@ fn import_custom_exe(
     db::import_game(&state, Path::new(&exe_path), title.as_deref())
 }
 
+#[tauri::command]
+fn add_custom_scan_path(
+    path: String,
+    state: State<'_, Database>,
+) -> Result<i64, String> {
+    db::add_custom_scan_path(&state, &path)
+}
+
+#[tauri::command]
+fn remove_custom_scan_path(
+    id: i64,
+    state: State<'_, Database>,
+) -> Result<bool, String> {
+    db::remove_custom_scan_path(&state, id)
+}
+
+#[tauri::command]
+fn list_custom_scan_paths(
+    state: State<'_, Database>,
+) -> Result<Vec<db::CustomScanPath>, String> {
+    db::list_custom_scan_paths(&state)
+}
+
+#[tauri::command]
+fn set_custom_scan_path_enabled(
+    id: i64,
+    enabled: bool,
+    state: State<'_, Database>,
+) -> Result<bool, String> {
+    db::set_custom_scan_path_enabled(&state, id, enabled)
+}
+
+#[tauri::command]
+fn delete_game(
+    game_id: String,
+    state: State<'_, Database>,
+) -> Result<bool, String> {
+    db::delete_game(&state, &game_id)
+}
+
+#[tauri::command]
+fn uninstall_game(
+    game_id: String,
+    state: State<'_, Database>,
+) -> Result<String, String> {
+    db::uninstall_game(&state, &game_id)
+}
+
 #[cfg(test)]
 mod tests {
     use super::is_executable_path;
@@ -204,8 +282,15 @@ fn main() {
             open_install_folder,
             pick_executable,
             import_custom_exe,
+            add_custom_scan_path,
+            remove_custom_scan_path,
+            list_custom_scan_paths,
+            set_custom_scan_path_enabled,
             icon_extractor::get_game_icon,
-            icon_extractor::clear_icon_cache
+            icon_extractor::clear_icon_cache,
+            update_game_location,
+            delete_game,
+            uninstall_game
         ])
         .setup(|app| {
             let database = db::init(app.handle())?;

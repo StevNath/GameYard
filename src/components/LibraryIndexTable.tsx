@@ -1,8 +1,8 @@
-import React from 'react';
-import { FolderPlus } from 'lucide-react';
+import React, { useState } from 'react';
+import { FolderPlus, MoreHorizontal } from 'lucide-react';
 import { useLibraryStore } from '../store/useLibraryStore';
 import { GameIconTile } from './GameIconTile';
-import { formatBytesToGB, formatPlaytimeHours } from '../services/tauriBridge';
+import { formatBytesToGB, formatPlaytimeHours, ipcPickExecutable } from '../services/tauriBridge';
 import { GameItem } from '../types/game';
 
 export const LibraryIndexTable: React.FC = () => {
@@ -14,7 +14,21 @@ export const LibraryIndexTable: React.FC = () => {
     setActiveGame,
     triggerGameAction,
     importLocalExe,
+    updateGameLocation,
+    deleteGame,
+    uninstallGame,
   } = useLibraryStore();
+
+  const [activeMenuGameId, setActiveMenuGameId] = useState<string | null>(null);
+
+  const handleUpdateLocation = async (gameId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setActiveMenuGameId(null);
+    const path = await ipcPickExecutable();
+    if (path) {
+      await updateGameLocation(gameId, path);
+    }
+  };
 
   const filteredGames = games.filter((game) => {
     const matchesStore =
@@ -242,9 +256,69 @@ export const LibraryIndexTable: React.FC = () => {
                   {/* Col 3: Honest Execution States */}
                   <div className="col-span-2">{renderStatusCell(game)}</div>
 
-                  {/* Col 4: 148x44 Action Button */}
-                  <div className="col-span-2 flex justify-end">
+                  {/* Col 4: Action Button + Three-dot Menu */}
+                  <div className="col-span-2 flex items-center justify-end gap-2">
                     {renderActionButton(game)}
+                    <div className="relative">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setActiveMenuGameId(activeMenuGameId === game.id ? null : game.id);
+                        }}
+                        className="p-2 rounded-gySm bg-gy-elevated border border-gy-border text-gy-muted hover:text-gy-ink hover:border-gy-ink transition-colors cursor-pointer"
+                        title="Game Options"
+                      >
+                        <MoreHorizontal className="w-4 h-4" />
+                      </button>
+
+                      {activeMenuGameId === game.id && (
+                        <>
+                          <div
+                            className="fixed inset-0 z-40"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setActiveMenuGameId(null);
+                            }}
+                          />
+                          <div className="absolute right-0 bottom-full mb-2 w-48 rounded-gySm bg-gy-surface border border-gy-border shadow-2xl z-50 py-1 font-sans text-xs">
+                            <button
+                              type="button"
+                              onClick={(e) => handleUpdateLocation(game.id, e)}
+                              className="w-full text-left px-3 py-2 text-gy-ink hover:bg-gy-elevated transition-colors flex items-center gap-2 cursor-pointer"
+                            >
+                              <span>Change Location (.exe)</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={async (e) => {
+                                e.stopPropagation();
+                                setActiveMenuGameId(null);
+                                if (confirm(`Remove ${game.title} from list? (Files will not be deleted)`)) {
+                                  await deleteGame(game.id);
+                                }
+                              }}
+                              className="w-full text-left px-3 py-2 text-gy-muted hover:bg-gy-elevated transition-colors flex items-center gap-2 cursor-pointer border-t border-gy-border"
+                            >
+                              <span>Remove from List</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={async (e) => {
+                                e.stopPropagation();
+                                setActiveMenuGameId(null);
+                                if (confirm(`Uninstall ${game.title}? This will DELETE all game files from disk. This action cannot be undone.`)) {
+                                  await uninstallGame(game.id);
+                                }
+                              }}
+                              className="w-full text-left px-3 py-2 text-red-500 hover:bg-gy-elevated transition-colors flex items-center gap-2 cursor-pointer border-t border-gy-border"
+                            >
+                              <span>Uninstall Game (Delete Files)</span>
+                            </button>
+                          </div>
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
               );
