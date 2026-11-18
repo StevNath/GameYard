@@ -19,6 +19,8 @@ export const App: React.FC = () => {
     clearToast,
     setSearchQuery,
     initializeLibrary,
+    isCustomPathsModalOpen,
+    closeCustomPathsModal,
   } = useLibraryStore();
 
   useEffect(() => {
