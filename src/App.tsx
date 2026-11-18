@@ -16,7 +16,12 @@ export const App: React.FC = () => {
     completeBootAnimation,
     clearToast,
     setSearchQuery,
+    initializeLibrary,
   } = useLibraryStore();
+
+  useEffect(() => {
+    initializeLibrary();
+  }, [initializeLibrary]);
 
   useEffect(() => {
     const handleGlobalKeyDown = (e: KeyboardEvent) => {

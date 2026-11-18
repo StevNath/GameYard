@@ -148,7 +148,7 @@ export const LibraryIndexTable: React.FC = () => {
       label = 'Install via Steam';
       btnClass = 'bg-gy-bg border-gy-border text-gy-muted hover:text-gy-ink';
     } else if (game.storefront === 'Local') {
-      label = 'Run .EXE';
+      label = 'Launch';
     }
 
     return (
@@ -325,8 +325,13 @@ export const LibraryIndexTable: React.FC = () => {
             })}
           </div>
         ) : (
-          <div className="p-8 text-center font-mono text-xs text-gy-muted">
-            No games matched filter "{searchQuery || selectedStorefront}".
+          <div className="p-8 text-center">
+            <h3 className="font-sans font-bold text-sm text-gy-ink mb-1">
+              Library is Empty
+            </h3>
+            <p className="font-mono text-xs text-gy-muted">
+              Start by scanning local drives to discover games.
+            </p>
           </div>
         )}
       </div>
