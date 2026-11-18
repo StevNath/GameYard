@@ -1,4 +1,4 @@
-<div style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background-color: #050505; color: #FFFFFF; padding: 36px; border-radius: 12px; border: 1px solid #262626; max-width: 1120px; margin: 0 auto;">
+<div style="font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background-color: #050505; color: #FFFFFF; padding: 36px; border-radius: 12px; border: 1px solid #262626; max-width: 1120px; margin: 0 auto;">
 <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #262626; padding-bottom: 24px; margin-bottom: 32px; flex-wrap: wrap; gap: 16px;">
 <div>
 <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
@@ -107,11 +107,11 @@ Cincin luar + 3 garasi membentuk huruf <strong>G</strong>, rotor tengah membentu
 <div style="margin-bottom: 16px;">
 <span style="color: #93F1F7; font-family: monospace; font-weight: 700; font-size: 13px;">03</span>
 <span style="font-size: 16px; font-weight: 700; margin-left: 6px; color: #FFFFFF;">Typography</span>
-<p style="font-size: 12px; color: #A3A3A3; margin: 4px 0 0 0;">Kombinasi <strong>Poppins</strong> (Display), <strong>Inter</strong> (UI), dan <strong>Liberation Mono</strong> (Path/URI).</p>
+<p style="font-size: 12px; color: #A3A3A3; margin: 4px 0 0 0;">Kombinasi <strong>Poppins</strong> (Display), <strong>System UI</strong> (UI), dan <strong>Liberation Mono</strong> (Path/URI).</p>
 </div>
 <div style="background: #000000; border: 1px solid #262626; border-radius: 6px; padding: 16px; display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 16px;">
 <div>
-<div style="font-size: 26px; font-weight: 800; color: #FFFFFF; letter-spacing: -0.02em;">Poppins &amp; Inter</div>
+<div style="font-size: 26px; font-weight: 800; color: #FFFFFF; letter-spacing: -0.02em;">Poppins &amp; System UI</div>
 <div style="font-family: monospace; font-size: 12px; color: #93F1F7; margin-top: 2px;">+ Liberation Mono (tabular-nums)</div>
 </div>
 <div style="font-size: 11px; color: #A3A3A3; font-family: monospace; line-height: 1.5; text-align: right;">

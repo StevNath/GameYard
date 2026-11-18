@@ -4,8 +4,10 @@ import { ActiveLaunchStage } from './components/ActiveLaunchStage';
 import { AsymmetricPinnedShelf } from './components/AsymmetricPinnedShelf';
 import { LibraryIndexTable } from './components/LibraryIndexTable';
 import { StartupSplash } from './components/StartupSplash';
+import { CustomScanPathManager } from './components/CustomScanPathManager';
 import { useLibraryStore } from './store/useLibraryStore';
 import { Terminal } from 'lucide-react';
+
 
 export const App: React.FC = () => {
   const {
@@ -79,6 +81,13 @@ export const App: React.FC = () => {
           </button>
         </div>
       )}
+
+      {/* Custom Scan Paths Modal */}
+      <CustomScanPathManager
+        isOpen={isCustomPathsModalOpen}
+        onClose={closeCustomPathsModal}
+        onPathsChanged={() => {}}
+      />
     </div>
   );
 };

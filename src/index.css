@@ -39,7 +39,7 @@ body,
   padding: 0;
   background-color: var(--gy-bg);
   color: var(--gy-ink);
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 }
 
 .tabular-nums {
