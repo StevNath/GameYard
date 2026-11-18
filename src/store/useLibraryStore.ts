@@ -10,6 +10,7 @@ import {
   ipcSetAutoKillRule,
   ipcSetPinnedSlot,
   ipcGetGameIcon,
+  ipcUpdateGameIcon,
   listenToScanProgress,
   ipcAddCustomScanPath,
   ipcRemoveCustomScanPath,
@@ -418,6 +419,7 @@ export const useLibraryStore = create<LibraryState>((set, get) => ({
       const icon = await ipcGetGameIcon(game.executable_path, true);
       if (icon) {
         const dataUrl = `data:image/png;base64,${icon.base64_png}`;
+        await ipcUpdateGameIcon(game.id, dataUrl);
         set((state) => ({
           games: state.games.map((g) =>
             g.id === game.id ? { ...g, icon_cache_path: dataUrl } : g
