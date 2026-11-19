@@ -26,7 +26,7 @@ export const HeaderCommandBar: React.FC = () => {
     toggleTheme,
     replayBootAnimation,
     scanDrives,
-    openCustomPathsModal,
+    openSettingsModal,
   } = useLibraryStore();
 
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -168,8 +168,8 @@ export const HeaderCommandBar: React.FC = () => {
 
         <button
           type="button"
-          onClick={openCustomPathsModal}
-          title="Manage Custom Scan Paths"
+          onClick={openSettingsModal}
+          title="Open Settings"
           className="min-h-[44px] min-w-[44px] px-2.5 rounded-gySm bg-gy-elevated border border-gy-border text-gy-muted hover:text-gy-ink active:scale-[0.98] transition-all flex items-center justify-center cursor-pointer"
         >
           <Settings className="w-4 h-4" />

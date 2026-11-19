@@ -12,12 +12,14 @@ interface CustomScanPathManagerProps {
   isOpen: boolean;
   onClose: () => void;
   onPathsChanged: () => void;
+  embedded?: boolean;
 }
 
 export const CustomScanPathManager: React.FC<CustomScanPathManagerProps> = ({
   isOpen,
   onClose,
   onPathsChanged,
+  embedded = false,
 }) => {
   const [paths, setPaths] = useState<CustomScanPath[]>([]);
   const [newPath, setNewPath] = useState('');
@@ -93,29 +95,30 @@ export const CustomScanPathManager: React.FC<CustomScanPathManagerProps> = ({
     }
   };
 
-  if (!isOpen) return null;
+  if (!isOpen && !embedded) return null;
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 animate-gy-drawer-open">
-      <div className="bg-gy-surface border border-gy-border rounded-gyMd w-full max-w-[720px] mx-4 flex flex-col max-h-[80vh]">
+  const modalContent = (
+    <div className={embedded ? "w-full flex flex-col h-full overflow-hidden" : "bg-gy-surface border border-gy-border rounded-gyMd w-full max-w-[720px] mx-4 flex flex-col max-h-[80vh] overflow-hidden"}>
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gy-border">
-          <div>
-            <h2 className="font-display font-bold text-[20px] leading-[28px] text-gy-ink">
-              Custom Scan Paths
-            </h2>
-            <p className="font-mono text-[11px] text-gy-muted mt-1">
-              Add folders to scan for .exe games during drive scan
-            </p>
+        {!embedded && (
+          <div className="flex items-center justify-between p-6 border-b border-gy-border">
+            <div>
+              <h2 className="font-display font-bold text-[20px] leading-[28px] text-gy-ink">
+                Custom Scan Paths
+              </h2>
+              <p className="font-mono text-[11px] text-gy-muted mt-1">
+                Add folders to scan for .exe games during drive scan
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={onClose}
+              className="min-h-[44px] min-w-[44px] rounded-gySm bg-gy-elevated border border-gy-border text-gy-muted hover:text-gy-ink hover:border-gy-muted active:scale-[0.98] transition-all flex items-center justify-center cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="min-h-[44px] min-w-[44px] rounded-gySm bg-gy-elevated border border-gy-border text-gy-muted hover:text-gy-ink hover:border-gy-muted active:scale-[0.98] transition-all flex items-center justify-center cursor-pointer"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
+        )}
 
         {/* Add Path Form */}
         <div className="p-6 border-b border-gy-border">
@@ -222,6 +225,15 @@ export const CustomScanPathManager: React.FC<CustomScanPathManagerProps> = ({
           </div>
         </div>
       </div>
+  );
+
+  if (embedded) {
+    return modalContent;
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 animate-gy-drawer-open">
+      {modalContent}
     </div>
   );
 };
