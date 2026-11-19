@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { RefreshCw, Search, Sun, Moon, AlertTriangle, Settings, FolderPlus } from 'lucide-react';
+import { RefreshCw, Search, Sun, Moon, AlertTriangle, Settings } from 'lucide-react';
 import { GameYardLogo } from './GameYardLogo';
 import { StoreFilter, useLibraryStore } from '../store/useLibraryStore';
 
@@ -26,7 +26,6 @@ export const HeaderCommandBar: React.FC = () => {
     toggleTheme,
     replayBootAnimation,
     scanDrives,
-    openCustomPathsModal,
     openSettingsModal,
   } = useLibraryStore();
 
