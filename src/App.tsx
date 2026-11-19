@@ -5,6 +5,7 @@ import { AsymmetricPinnedShelf } from './components/AsymmetricPinnedShelf';
 import { LibraryIndexTable } from './components/LibraryIndexTable';
 import { StartupSplash } from './components/StartupSplash';
 import { CustomScanPathManager } from './components/CustomScanPathManager';
+import { SettingsModal } from './components/SettingsModal';
 import { useLibraryStore } from './store/useLibraryStore';
 import { Terminal } from 'lucide-react';
 
@@ -21,6 +22,8 @@ export const App: React.FC = () => {
     initializeLibrary,
     isCustomPathsModalOpen,
     closeCustomPathsModal,
+    isSettingsModalOpen,
+    closeSettingsModal,
   } = useLibraryStore();
 
   useEffect(() => {
@@ -88,6 +91,13 @@ export const App: React.FC = () => {
       <CustomScanPathManager
         isOpen={isCustomPathsModalOpen}
         onClose={closeCustomPathsModal}
+        onPathsChanged={() => {}}
+      />
+
+      {/* Settings Modal */}
+      <SettingsModal
+        isOpen={isSettingsModalOpen}
+        onClose={closeSettingsModal}
         onPathsChanged={() => {}}
       />
     </div>

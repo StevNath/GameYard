@@ -12,6 +12,7 @@ interface CustomScanPathManagerProps {
   isOpen: boolean;
   onClose: () => void;
   onPathsChanged: () => void;
+  embedded?: boolean;
 }
 
 export const CustomScanPathManager: React.FC<CustomScanPathManagerProps> = ({

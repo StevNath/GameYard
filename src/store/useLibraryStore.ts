@@ -46,6 +46,7 @@ interface LibraryState {
   toastMessage: string | null;
   customScanPaths: CustomScanPath[];
   isCustomPathsModalOpen: boolean;
+  isSettingsModalOpen: boolean;
   initializeLibrary: () => Promise<void>;
   setActiveGame: (gameId: string) => void;
   setSelectedStorefront: (storefront: StoreFilter) => void;
@@ -71,6 +72,8 @@ interface LibraryState {
   uninstallGame: (gameId: string) => Promise<void>;
   openCustomPathsModal: () => void;
   closeCustomPathsModal: () => void;
+  openSettingsModal: () => void;
+  closeSettingsModal: () => void;
 }
 
 export const useLibraryStore = create<LibraryState>((set, get) => ({
@@ -86,6 +89,7 @@ export const useLibraryStore = create<LibraryState>((set, get) => ({
   toastMessage: null,
   customScanPaths: [],
   isCustomPathsModalOpen: false,
+  isSettingsModalOpen: false,
 
   initializeLibrary: async () => {
     try {
@@ -524,4 +528,8 @@ export const useLibraryStore = create<LibraryState>((set, get) => ({
   openCustomPathsModal: () => set({ isCustomPathsModalOpen: true }),
 
   closeCustomPathsModal: () => set({ isCustomPathsModalOpen: false }),
+
+  openSettingsModal: () => set({ isSettingsModalOpen: true }),
+
+  closeSettingsModal: () => set({ isSettingsModalOpen: false }),
 }));
