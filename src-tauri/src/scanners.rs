@@ -108,25 +108,73 @@ fn scan_custom_path(path: &Path) -> Vec<DiscoveredGame> {
                 size_bytes,
             });
         } else if candidate.is_dir() {
-            // Support game library folder 1 level below custom_path
-            if let Some(exe) = find_best_game_exe(&candidate) {
-                let Some(title) = candidate.file_name().and_then(|value| value.to_str()) else {
-                    continue;
-                };
-                let install_dir = Some(candidate.to_path_buf());
-                let size_bytes = calculate_folder_size(&candidate);
+            // Check if this directory contains multiple game subdirectories (library folder)
+            // like HoyoPlay\games\Genshin Impact, Honkai Star Rail, etc.
+            let subdirs: Vec<_> = fs::read_dir(&candidate)
+                .map(|entries| {
+                    entries
+                        .flatten()
+                        .filter(|e| e.path().is_dir())
+                        .map(|e| e.path())
+                        .collect()
+                })
+                .unwrap_or_default();
 
-                games.push(DiscoveredGame {
-                    id: format!("local_{}", stable_id(&candidate)),
-                    title: title.to_string(),
-                    storefront: "Local".to_string(),
-                    external_app_id: stable_id(&candidate),
-                    launch_uri: exe.to_string_lossy().to_string(),
-                    executable_path: Some(exe.to_string_lossy().to_string()),
-                    drive_letter: drive_letter(&candidate),
-                    install_dir: install_dir.map(|path| path.to_string_lossy().to_string()),
-                    size_bytes,
-                });
+            let mut has_multiple_games = false;
+            for subdir in &subdirs {
+                if find_best_game_exe(subdir).is_some() {
+                    if has_multiple_games {
+                        // Found at least 2 subdirs with valid executables -> treat as library folder
+                        break;
+                    }
+                    has_multiple_games = true;
+                }
+            }
+
+            if has_multiple_games {
+                // Scan each subdirectory as a separate game
+                for subdir in subdirs {
+                    if let Some(exe) = find_best_game_exe(&subdir) {
+                        let Some(title) = subdir.file_name().and_then(|value| value.to_str()) else {
+                            continue;
+                        };
+                        let install_dir = Some(subdir.clone());
+                        let size_bytes = calculate_folder_size(&subdir);
+
+                        games.push(DiscoveredGame {
+                            id: format!("local_{}", stable_id(&subdir)),
+                            title: title.to_string(),
+                            storefront: "Local".to_string(),
+                            external_app_id: stable_id(&subdir),
+                            launch_uri: exe.to_string_lossy().to_string(),
+                            executable_path: Some(exe.to_string_lossy().to_string()),
+                            drive_letter: drive_letter(&subdir),
+                            install_dir: install_dir.map(|path| path.to_string_lossy().to_string()),
+                            size_bytes,
+                        });
+                    }
+                }
+            } else {
+                // Single game folder (original behavior)
+                if let Some(exe) = find_best_game_exe(&candidate) {
+                    let Some(title) = candidate.file_name().and_then(|value| value.to_str()) else {
+                        continue;
+                    };
+                    let install_dir = Some(candidate.to_path_buf());
+                    let size_bytes = calculate_folder_size(&candidate);
+
+                    games.push(DiscoveredGame {
+                        id: format!("local_{}", stable_id(&candidate)),
+                        title: title.to_string(),
+                        storefront: "Local".to_string(),
+                        external_app_id: stable_id(&candidate),
+                        launch_uri: exe.to_string_lossy().to_string(),
+                        executable_path: Some(exe.to_string_lossy().to_string()),
+                        drive_letter: drive_letter(&candidate),
+                        install_dir: install_dir.map(|path| path.to_string_lossy().to_string()),
+                        size_bytes,
+                    });
+                }
             }
         }
     }
