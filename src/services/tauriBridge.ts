@@ -375,6 +375,13 @@ export async function ipcUpdateGameLocation(gameId: string, exePath: string): Pr
   throw new Error('Not in Tauri runtime');
 }
 
+export async function ipcUpdateGameTitle(gameId: string, newTitle: string): Promise<GameItem> {
+  if (isTauriRuntime()) {
+    return await invoke<GameItem>('update_game_title', { gameId, newTitle });
+  }
+  throw new Error('Not in Tauri runtime');
+}
+
 export async function ipcDeleteGame(gameId: string): Promise<boolean> {
   if (isTauriRuntime()) {
     return await invoke<boolean>('delete_game', { gameId });

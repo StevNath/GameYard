@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FolderPlus, MoreHorizontal } from 'lucide-react';
+import { FolderPlus, MoreHorizontal, Edit2 } from 'lucide-react';
 import { useLibraryStore } from '../store/useLibraryStore';
 import { GameIconTile } from './GameIconTile';
 import { formatBytesToGB, formatPlaytimeHours, ipcPickExecutable } from '../services/tauriBridge';
@@ -17,6 +17,7 @@ export const LibraryIndexTable: React.FC = () => {
     updateGameLocation,
     deleteGame,
     uninstallGame,
+    renameGame,
   } = useLibraryStore();
 
   const [activeMenuGameId, setActiveMenuGameId] = useState<string | null>(null);
@@ -277,8 +278,23 @@ export const LibraryIndexTable: React.FC = () => {
                       <div className="ml-auto w-[200px] rounded-gySm bg-gy-surface border border-gy-border py-1 font-sans text-xs">
                         <button
                           type="button"
-                          onClick={(e) => handleUpdateLocation(game.id, e)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setActiveMenuGameId(null);
+                            const newName = prompt('Enter new game name:', game.title);
+                            if (newName && newName.trim() && newName.trim() !== game.title) {
+                              renameGame(game.id, newName.trim());
+                            }
+                          }}
                           className="w-full text-left px-3 py-2 text-gy-ink hover:bg-gy-elevated transition-colors flex items-center gap-2 cursor-pointer"
+                        >
+                          <Edit2 className="w-3.5 h-3.5" />
+                          <span>Rename Game</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => handleUpdateLocation(game.id, e)}
+                          className="w-full text-left px-3 py-2 text-gy-ink hover:bg-gy-elevated transition-colors flex items-center gap-2 cursor-pointer border-t border-gy-border"
                         >
                           <span>Change Location (.exe)</span>
                         </button>

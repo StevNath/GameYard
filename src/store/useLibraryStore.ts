@@ -18,6 +18,7 @@ import {
   ipcListCustomScanPaths,
   ipcSetCustomScanPathEnabled,
   ipcUpdateGameLocation,
+  ipcUpdateGameTitle,
   ipcDeleteGame,
   ipcUninstallGame,
 } from '../services/tauriBridge';
@@ -71,6 +72,7 @@ interface LibraryState {
   updateGameLocation: (gameId: string, exePath: string) => Promise<void>;
   deleteGame: (gameId: string) => Promise<void>;
   uninstallGame: (gameId: string) => Promise<void>;
+  renameGame: (gameId: string, newTitle: string) => Promise<void>;
   openCustomPathsModal: () => void;
   closeCustomPathsModal: () => void;
   openSettingsModal: () => void;
@@ -520,6 +522,19 @@ export const useLibraryStore = create<LibraryState>((set, get) => ({
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       set({ toastMessage: `Failed to delete game: ${msg}` });
+    }
+  },
+
+  renameGame: async (gameId: string, newTitle: string) => {
+    try {
+      const updatedGame = await ipcUpdateGameTitle(gameId, newTitle);
+      set((state) => ({
+        games: state.games.map((g) => (g.id === gameId ? updatedGame : g)),
+        toastMessage: `Renamed game to ${updatedGame.title}`,
+      }));
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      set({ toastMessage: `Failed to rename game: ${msg}` });
     }
   },
 
