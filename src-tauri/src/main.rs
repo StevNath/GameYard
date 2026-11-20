@@ -24,6 +24,15 @@ fn is_executable_path(path: &Path) -> bool {
 }
 
 #[tauri::command]
+fn update_game_title(
+    game_id: String,
+    new_title: String,
+    state: State<'_, Database>,
+) -> Result<db::GameItem, String> {
+    db::update_game_title(&state, &game_id, &new_title)
+}
+
+#[tauri::command]
 fn update_game_location(
     game_id: String,
     exe_path: String,
@@ -304,6 +313,7 @@ fn main() {
             icon_extractor::get_game_icon,
             icon_extractor::clear_icon_cache,
             update_game_location,
+            update_game_title,
             delete_game,
             uninstall_game,
             update_game_icon

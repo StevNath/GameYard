@@ -583,6 +583,26 @@ pub fn uninstall_game(db: &Database, game_id: &str) -> Result<String, String> {
     Ok(format!("Successfully uninstalled {} and deleted files from {}", game.title, install_dir))
 }
 
+pub fn update_game_title(
+    db: &Database,
+    game_id: &str,
+    new_title: &str,
+) -> Result<GameItem, String> {
+    let new_title = new_title.trim();
+    if new_title.is_empty() {
+        return Err("title cannot be empty".to_string());
+    }
+
+    let mut game = get_game(db, game_id)?.ok_or_else(|| "game not found".to_string())?;
+
+    game.title = new_title.to_string();
+    game.short_code = short_code_for(new_title);
+    game.updated_at = now_timestamp();
+
+    insert_game(db, &game)?;
+    Ok(game)
+}
+
 pub fn update_game_location(
     db: &Database,
     game_id: &str,
