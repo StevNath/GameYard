@@ -10,7 +10,7 @@ interface SettingsModalProps {
 
 type SettingsTab = 'scan-paths' | 'about' | 'credits';
 
-const APP_VERSION = '0.2.0';
+const APP_VERSION = '0.1.2';
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({
   isOpen,

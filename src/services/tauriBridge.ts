@@ -1,6 +1,6 @@
 import { invoke } from '@tauri-apps/api/core';
 import { GameItem, LaunchResult, ScanSummary, Storefront, IconData, ScanProgress, CustomScanPath } from '../types/game';
-import { listen } from '@tauri-apps/api/event';
+import { listen, Event } from '@tauri-apps/api/event';
 
 const GB = 1024 * 1024 * 1024;
 const HOUR = 3600;
@@ -399,6 +399,13 @@ export async function ipcUpdateGameIcon(gameId: string, iconPath: string): Promi
 export function listenToScanProgress(callback: (event: { payload: ScanProgress }) => void) {
   if (isTauriRuntime()) {
     return listen<ScanProgress>('scan-progress', callback);
+  }
+  return Promise.resolve(() => {});
+}
+
+export function listenToProcessState(callback: (event: Event<any>) => void) {
+  if (isTauriRuntime()) {
+    return listen('gameyard://process-state', callback);
   }
   return Promise.resolve(() => {});
 }

@@ -12,6 +12,7 @@ import {
   ipcGetGameIcon,
   ipcUpdateGameIcon,
   listenToScanProgress,
+  listenToProcessState,
   ipcAddCustomScanPath,
   ipcRemoveCustomScanPath,
   ipcListCustomScanPaths,
@@ -97,6 +98,19 @@ export const useLibraryStore = create<LibraryState>((set, get) => ({
       set({
         games,
         activeGameId: games.length > 0 ? games[0].id : ''
+      });
+
+      // Setup process state listener
+      listenToProcessState((event) => {
+        const { game_id, status, message } = event.payload;
+        set((state) => ({
+          games: state.games.map((g) =>
+            g.id === game_id
+              ? { ...g, install_state: status, status_message: message }
+              : g
+          ),
+          toastMessage: status === 'running' ? null : message,
+        }));
       });
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);

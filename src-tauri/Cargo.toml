@@ -1,6 +1,6 @@
 [package]
 name = "gameyard"
-version = "0.1.0"
+version = "0.1.2"
 description = "GameYard Backend Engine"
 authors = ["Steven Nathanael"]
 edition = "2021"

@@ -117,7 +117,13 @@ fn launch_game(
         command.args(["/C", "start", "", &game.launch_uri]);
         command
     } else {
-        Command::new(&game.launch_uri)
+        let mut cmd = Command::new(&game.launch_uri);
+        if let Some(ref install_dir) = game.install_dir {
+            cmd.current_dir(install_dir);
+        } else if let Some(parent) = Path::new(&game.launch_uri).parent() {
+            cmd.current_dir(parent);
+        }
+        cmd
     };
 
     let child = command
