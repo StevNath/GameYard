@@ -2,7 +2,7 @@ name: GameYard CI
 
 on:
   push:
-    branches: [master, 'issue/**']
+    branches: [master, 'issue/**', 'feature/**']
   pull_request:
     branches: [master]
   workflow_dispatch:
@@ -53,6 +53,9 @@ jobs:
       - name: Test Rust backend
         run: cargo test --locked
         working-directory: src-tauri
+
+      - name: Clean previous bundles
+        run: powershell Remove-Item -Recurse -Force src-tauri/target/release/bundle/* -ErrorAction SilentlyContinue
 
       - name: Build Tauri app
         run: npm run tauri build
