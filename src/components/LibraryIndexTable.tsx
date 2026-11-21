@@ -4,6 +4,8 @@ import { useLibraryStore } from '../store/useLibraryStore';
 import { GameIconTile } from './GameIconTile';
 import { formatBytesToGB, formatPlaytimeHours, ipcPickExecutable } from '../services/tauriBridge';
 import { GameItem } from '../types/game';
+import { ConfirmModal } from './ConfirmModal';
+import { PromptModal } from './PromptModal';
 
 export const LibraryIndexTable: React.FC = () => {
   const {
@@ -21,6 +23,9 @@ export const LibraryIndexTable: React.FC = () => {
   } = useLibraryStore();
 
   const [activeMenuGameId, setActiveMenuGameId] = useState<string | null>(null);
+  const [renameModalGame, setRenameModalGame] = useState<GameItem | null>(null);
+  const [removeConfirmGame, setRemoveConfirmGame] = useState<GameItem | null>(null);
+  const [uninstallConfirmGame, setUninstallConfirmGame] = useState<GameItem | null>(null);
 
   const handleUpdateLocation = async (gameId: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -281,10 +286,7 @@ export const LibraryIndexTable: React.FC = () => {
                           onClick={(e) => {
                             e.stopPropagation();
                             setActiveMenuGameId(null);
-                            const newName = prompt('Enter new game name:', game.title);
-                            if (newName && newName.trim() && newName.trim() !== game.title) {
-                              renameGame(game.id, newName.trim());
-                            }
+                            setRenameModalGame(game);
                           }}
                           className="w-full text-left px-3 py-2 text-gy-ink hover:bg-gy-elevated transition-colors flex items-center gap-2 cursor-pointer"
                         >
@@ -300,12 +302,10 @@ export const LibraryIndexTable: React.FC = () => {
                         </button>
                         <button
                           type="button"
-                          onClick={async (e) => {
+                          onClick={(e) => {
                             e.stopPropagation();
                             setActiveMenuGameId(null);
-                            if (confirm(`Remove ${game.title} from list? (Files will not be deleted)`)) {
-                              await deleteGame(game.id);
-                            }
+                            setRemoveConfirmGame(game);
                           }}
                           className="w-full text-left px-3 py-2 text-gy-muted hover:bg-gy-elevated transition-colors flex items-center gap-2 cursor-pointer border-t border-gy-border"
                         >
@@ -313,12 +313,10 @@ export const LibraryIndexTable: React.FC = () => {
                         </button>
                         <button
                           type="button"
-                          onClick={async (e) => {
+                          onClick={(e) => {
                             e.stopPropagation();
                             setActiveMenuGameId(null);
-                            if (confirm(`Uninstall ${game.title}? This will DELETE all game files from disk. This action cannot be undone.`)) {
-                              await uninstallGame(game.id);
-                            }
+                            setUninstallConfirmGame(game);
                           }}
                           className="w-full text-left px-3 py-2 text-red-500 hover:bg-gy-elevated transition-colors flex items-center gap-2 cursor-pointer border-t border-gy-border"
                         >
@@ -368,6 +366,61 @@ export const LibraryIndexTable: React.FC = () => {
           <span>Select Game Folder</span>
         </button>
       </div>
+    {/* Rename Game Modal */}
+      <PromptModal
+        isOpen={!!renameModalGame}
+        onClose={() => setRenameModalGame(null)}
+        onConfirm={(newTitle) => {
+          if (renameModalGame && newTitle !== renameModalGame.title) {
+            renameGame(renameModalGame.id, newTitle);
+          }
+          setRenameModalGame(null);
+        }}
+        title="Rename Game"
+        message="Enter a new name for this game. This will update the display name and regenerate the short code."
+        placeholder="Game Name"
+        defaultValue={renameModalGame?.title || ''}
+        confirmText="Rename"
+        validation={(value) => {
+          if (!value.trim()) return 'Game name cannot be empty';
+          if (value.trim() === renameModalGame?.title) return 'Name is unchanged';
+          return null;
+        }}
+      />
+
+      {/* Remove from List Confirmation Modal */}
+      <ConfirmModal
+        isOpen={!!removeConfirmGame}
+        onClose={() => setRemoveConfirmGame(null)}
+        onConfirm={() => {
+          if (removeConfirmGame) {
+            deleteGame(removeConfirmGame.id);
+          }
+          setRemoveConfirmGame(null);
+        }}
+        title="Remove from List"
+        message={`Remove "${removeConfirmGame?.title}" from your GameYard library?\n\nThis will only remove the entry from the database. The game files on disk will NOT be deleted.`}
+        confirmText="Remove from List"
+        cancelText="Keep in Library"
+        variant="warning"
+      />
+
+      {/* Uninstall Game Confirmation Modal */}
+      <ConfirmModal
+        isOpen={!!uninstallConfirmGame}
+        onClose={() => setUninstallConfirmGame(null)}
+        onConfirm={() => {
+          if (uninstallConfirmGame) {
+            uninstallGame(uninstallConfirmGame.id);
+          }
+          setUninstallConfirmGame(null);
+        }}
+        title="Uninstall Game"
+        message={`Uninstall "${uninstallConfirmGame?.title}"?\n\nThis will PERMANENTLY DELETE all game files from disk. This action cannot be undone.\n\nMake sure you have backups if needed.`}
+        confirmText="Uninstall (Delete Files)"
+        cancelText="Cancel"
+        variant="danger"
+      />
     </section>
   );
 };
