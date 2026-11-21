@@ -115,14 +115,21 @@ fn scan_custom_path(path: &Path) -> Vec<DiscoveredGame> {
                     entries
                         .flatten()
                         .filter(|e| e.path().is_dir())
+                        .filter(|e| !is_version_folder(e.path().file_name().and_then(|v| v.to_str()).unwrap_or("")))
                         .map(|e| e.path())
                         .collect()
                 })
                 .unwrap_or_default();
 
+            // Also check if this is a known library folder name (e.g., "games" for HoyoPlay)
+            let candidate_name = candidate.file_name().and_then(|v| v.to_str()).unwrap_or("").to_ascii_lowercase();
+            let is_known_library_folder = candidate_name == "games" || candidate_name == "library";
+
             let mut has_multiple_games = false;
+            let mut game_subdirs: Vec<PathBuf> = Vec::new();
             for subdir in &subdirs {
                 if find_best_game_exe(subdir).is_some() {
+                    game_subdirs.push(subdir.clone());
                     if has_multiple_games {
                         // Found at least 2 subdirs with valid executables -> treat as library folder
                         break;
@@ -131,9 +138,30 @@ fn scan_custom_path(path: &Path) -> Vec<DiscoveredGame> {
                 }
             }
 
-            if has_multiple_games {
+            // For known library folders (like HoyoPlay\games), also check if any subdir is a known Hoyo game
+            if is_known_library_folder && !has_multiple_games {
+                for subdir in &subdirs {
+                    let subdir_name = subdir.file_name().and_then(|v| v.to_str()).unwrap_or("").to_ascii_lowercase();
+                    if subdir_name.contains("genshin") || subdir_name.contains("honkai") || subdir_name.contains("starrail") || subdir_name.contains("zenless") || subdir_name.contains("zzz") {
+                        if find_best_game_exe(subdir).is_some() {
+                            game_subdirs.push(subdir.clone());
+                            if game_subdirs.len() >= 2 {
+                                has_multiple_games = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+
+            if has_multiple_games || (is_known_library_folder && game_subdirs.len() >= 1) {
                 // Scan each subdirectory as a separate game
-                for subdir in subdirs {
+                let target_dirs = if is_known_library_folder && !has_multiple_games {
+                    game_subdirs
+                } else {
+                    subdirs
+                };
+                for subdir in target_dirs {
                     if let Some(exe) = find_best_game_exe(&subdir) {
                         let Some(title) = subdir.file_name().and_then(|value| value.to_str()) else {
                             continue;
@@ -291,6 +319,12 @@ fn find_best_game_exe(install_dir: &Path) -> Option<PathBuf> {
                 "plugin", "sys", "hyp", "crash", "reporter", "bgm", "cef",
                 "web", "browser", "host", "overlay", "wrapper", "useless",
                 "questr", "global", "system", "runtime", "redist",
+                "webhelper", "epicwebhelper", "hysafemode", "safemode",
+                "anticheat", "anti-cheat", "be_service", "be_launcher",
+                "battleye_launcher", "eula", "readme", "license", "uninstall",
+                "repair", "verify", "dxsetup", "vcredist", "dotnet", "vc_redist",
+                "msvc", "directx", "physx", "steamworks", "commonredist",
+                "redistributable",
             ].iter().any(|kw| exe_stem_lower.contains(kw));
 
             // Calculate name similarity score
@@ -340,6 +374,33 @@ fn largest_game_exe(install_dir: &Path) -> Option<PathBuf> {
     find_best_game_exe(install_dir)
 }
 
+fn is_version_folder(name: &str) -> bool {
+    let name = name.to_ascii_lowercase();
+    // Match version-like folders: 1.19.0.382, 2.0.0, v1.0.0, etc.
+    // Simple check: starts with optional 'v', then digits, then at least 2 dots with digits
+    if name.starts_with('v') && name.len() > 1 {
+        let without_v = &name[1..];
+        if without_v.chars().next().map(|c| c.is_ascii_digit()).unwrap_or(false) {
+            let dot_count = without_v.chars().filter(|c| *c == '.').count();
+            if dot_count >= 2 && without_v.chars().all(|c| c.is_ascii_digit() || c == '.') {
+                return true;
+            }
+        }
+    }
+    // Also check without 'v' prefix
+    if name.chars().next().map(|c| c.is_ascii_digit()).unwrap_or(false) {
+        let dot_count = name.chars().filter(|c| *c == '.').count();
+        if dot_count >= 2 && name.chars().all(|c| c.is_ascii_digit() || c == '.') {
+            return true;
+        }
+    }
+    // Also skip common non-game version folders
+    matches!(
+        name.as_str(),
+        "temp" | "tmp" | "cache" | "logs" | "log" | "backup" | "backups" | "old"
+    )
+}
+
 fn is_skipped_asset_dir(name: &str) -> bool {
     let lower = name.to_ascii_lowercase();
     matches!(
@@ -365,6 +426,52 @@ fn ignored_executable(name: &str) -> bool {
         "battleye",
         "benchmark",
         "config",
+        "epicwebhelper",
+        "webhelper",
+        "hysafemode",
+        "safemode",
+        "anticheat",
+        "anti-cheat",
+        "be_service",
+        "be_launcher",
+        "battleye_launcher",
+        "eula",
+        "readme",
+        "license",
+        "uninstall",
+        "repair",
+        "verify",
+        "dxsetup",
+        "vcredist",
+        "dotnet",
+        "vc_redist",
+        "msvc",
+        "directx",
+        "physx",
+        "steamworks",
+        "commonredist",
+        "redistributable",
+        "rockstar",
+        "socialclub",
+        "rgsc",
+        "launcher",
+        "updater",
+        "patch",
+        "install",
+        "bootstrap",
+        "service",
+        "agent",
+        "daemon",
+        "manager",
+        "overlay",
+        "host",
+        "browser",
+        "cef",
+        "helper",
+        "tool",
+        "utility",
+        "config",
+        "settings",
     ]
     .iter()
     .any(|keyword| name.contains(keyword))
