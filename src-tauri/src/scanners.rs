@@ -1,4 +1,5 @@
 use crate::db::DiscoveredGame;
+use regex::Regex;
 use serde::Serialize;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -115,6 +116,7 @@ fn scan_custom_path(path: &Path) -> Vec<DiscoveredGame> {
                     entries
                         .flatten()
                         .filter(|e| e.path().is_dir())
+                        .filter(|e| !is_version_folder(e.path().file_name().and_then(|v| v.to_str()).unwrap_or("")))
                         .map(|e| e.path())
                         .collect()
                 })
@@ -291,6 +293,12 @@ fn find_best_game_exe(install_dir: &Path) -> Option<PathBuf> {
                 "plugin", "sys", "hyp", "crash", "reporter", "bgm", "cef",
                 "web", "browser", "host", "overlay", "wrapper", "useless",
                 "questr", "global", "system", "runtime", "redist",
+                "webhelper", "epicwebhelper", "hysafemode", "safemode",
+                "anticheat", "anti-cheat", "be_service", "be_launcher",
+                "battleye_launcher", "eula", "readme", "license", "uninstall",
+                "repair", "verify", "dxsetup", "vcredist", "dotnet", "vc_redist",
+                "msvc", "directx", "physx", "steamworks", "commonredist",
+                "redistributable",
             ].iter().any(|kw| exe_stem_lower.contains(kw));
 
             // Calculate name similarity score
@@ -340,6 +348,20 @@ fn largest_game_exe(install_dir: &Path) -> Option<PathBuf> {
     find_best_game_exe(install_dir)
 }
 
+fn is_version_folder(name: &str) -> bool {
+    let name = name.to_ascii_lowercase();
+    // Match version-like folders: 1.19.0.382, 2.0.0, v1.0.0, etc.
+    let version_regex = regex::Regex::new(r"^(v?\d+(\.\d+){2,}(?:\.\d+)?)$").unwrap();
+    if version_regex.is_match(&name) {
+        return true;
+    }
+    // Also skip common non-game version folders
+    matches!(
+        name.as_str(),
+        "temp" | "tmp" | "cache" | "logs" | "log" | "backup" | "backups" | "old"
+    )
+}
+
 fn is_skipped_asset_dir(name: &str) -> bool {
     let lower = name.to_ascii_lowercase();
     matches!(
@@ -365,6 +387,31 @@ fn ignored_executable(name: &str) -> bool {
         "battleye",
         "benchmark",
         "config",
+        "epicwebhelper",
+        "webhelper",
+        "hysafemode",
+        "safemode",
+        "anticheat",
+        "anti-cheat",
+        "be_service",
+        "be_launcher",
+        "battleye_launcher",
+        "eula",
+        "readme",
+        "license",
+        "uninstall",
+        "repair",
+        "verify",
+        "dxsetup",
+        "vcredist",
+        "dotnet",
+        "vc_redist",
+        "msvc",
+        "directx",
+        "physx",
+        "steamworks",
+        "commonredist",
+        "redistributable",
     ]
     .iter()
     .any(|keyword| name.contains(keyword))
