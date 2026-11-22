@@ -33,8 +33,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       layoutText: '3-Zone Layout',
     },
     {
-      id: 'steam-big-picture',
-      name: 'Steam Big Picture',
+      id: 'grid-mode',
+      name: 'Grid Mode',
       desc: 'Dark navy console-first design with 6-column poster grid',
       bg: '#0E141B',
       accent: '#4ADE80',

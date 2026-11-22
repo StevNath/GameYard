@@ -61,7 +61,7 @@ export const App: React.FC = () => {
       <HeaderCommandBar />
 
       {/* Main Workspace: Adapt layout according to active theme */}
-      {theme === 'steam-big-picture' ? (
+      {theme === 'grid-mode' ? (
         <ConsoleGridMode />
       ) : (
         /* Standard 2-Column 3-Zone Workspace below Header */

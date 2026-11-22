@@ -26,7 +26,7 @@ import {
 } from '../services/tauriBridge';
 
 export type StoreFilter = 'All' | Storefront;
-export type ThemeMode = 'candy-on-black' | 'steam-big-picture' | 'light';
+export type ThemeMode = 'candy-on-black' | 'grid-mode' | 'light';
 
 const STALL_ANGLES: Record<Storefront, number> = {
   Steam: -27,
@@ -155,7 +155,7 @@ export const useLibraryStore = create<LibraryState>((set, get) => ({
   setSearchQuery: (query) => set({ searchQuery: query }),
 
   toggleTheme: () => {
-    const themes: ThemeMode[] = ['candy-on-black', 'steam-big-picture', 'light'];
+    const themes: ThemeMode[] = ['candy-on-black', 'grid-mode', 'light'];
     const currentIdx = themes.indexOf(get().theme);
     const nextTheme = themes[(currentIdx + 1) % themes.length];
     document.documentElement.setAttribute('data-theme', nextTheme);
@@ -171,7 +171,7 @@ export const useLibraryStore = create<LibraryState>((set, get) => ({
 
   initializeTheme: () => {
     const saved = localStorage.getItem('gameyard-theme') as ThemeMode | null;
-    if (saved && ['candy-on-black', 'steam-big-picture', 'light'].includes(saved)) {
+    if (saved && ['candy-on-black', 'grid-mode', 'light'].includes(saved)) {
       document.documentElement.setAttribute('data-theme', saved);
       set({ theme: saved });
     }
