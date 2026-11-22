@@ -21,6 +21,8 @@ import {
   ipcUpdateGameTitle,
   ipcDeleteGame,
   ipcUninstallGame,
+  ipcHideToTray,
+  ipcShowFromTray,
 } from '../services/tauriBridge';
 
 export type StoreFilter = 'All' | Storefront;
@@ -105,6 +107,20 @@ export const useLibraryStore = create<LibraryState>((set, get) => ({
       // Setup process state listener
       listenToProcessState((event) => {
         const { game_id, status, message } = event.payload;
+
+        // Auto-hide to tray when game transitions to running
+        if (status === 'running') {
+          ipcHideToTray();
+        }
+
+        // Auto-restore from tray when game session ends (ready after running)
+        if (status === 'ready') {
+          const prevGame = get().games.find((g) => g.id === game_id);
+          if (prevGame && (prevGame.install_state === 'running' || prevGame.install_state === 'closing_client')) {
+            ipcShowFromTray();
+          }
+        }
+
         set((state) => ({
           games: state.games.map((g) =>
             g.id === game_id

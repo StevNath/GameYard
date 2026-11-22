@@ -12,6 +12,9 @@ use std::path::Path;
 use std::process::Command;
 use std::sync::{Arc, Mutex};
 use tauri::{AppHandle, Manager, State};
+use tauri::menu::{Menu, MenuItem};
+use tauri::tray::{TrayIconBuilder, TrayIconEvent};
+use tauri::Emitter;
 
 struct LauncherState {
     watchers: Arc<Mutex<HashMap<String, launcher::process_watcher::WatcherHandle>>>,
@@ -274,6 +277,23 @@ fn uninstall_game(
     db::uninstall_game(&state, &game_id)
 }
 
+#[tauri::command]
+fn hide_to_tray(app: AppHandle) -> Result<(), String> {
+    if let Some(window) = app.get_webview_window("main") {
+        window.hide().map_err(|e| e.to_string())?;
+    }
+    Ok(())
+}
+
+#[tauri::command]
+fn show_from_tray(app: AppHandle) -> Result<(), String> {
+    if let Some(window) = app.get_webview_window("main") {
+        window.show().map_err(|e| e.to_string())?;
+        window.set_focus().map_err(|e| e.to_string())?;
+    }
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::is_executable_path;
@@ -316,9 +336,41 @@ fn main() {
             update_game_title,
             delete_game,
             uninstall_game,
-            update_game_icon
+            update_game_icon,
+            hide_to_tray,
+            show_from_tray
         ])
         .setup(|app| {
+            let show_item = MenuItem::with_id(app, "show", "Show GameYard", true, None::<&str>)?;
+            let quit_item = MenuItem::with_id(app, "quit", "Quit GameYard", true, None::<&str>)?;
+            let menu = Menu::with_items(app, &[&show_item, &quit_item])?;
+
+            let _tray = TrayIconBuilder::new()
+                .icon(app.default_window_icon().unwrap().clone())
+                .menu(&menu)
+                .on_menu_event(|app, event| match event.id.as_ref() {
+                    "show" => {
+                        if let Some(window) = app.get_webview_window("main") {
+                            let _ = window.show();
+                            let _ = window.set_focus();
+                        }
+                    }
+                    "quit" => {
+                        app.exit(0);
+                    }
+                    _ => {}
+                })
+                .on_tray_icon_event(|tray, event| {
+                    if let TrayIconEvent::Click { .. } = event {
+                        let app = tray.app_handle();
+                        if let Some(window) = app.get_webview_window("main") {
+                            let _ = window.show();
+                            let _ = window.set_focus();
+                        }
+                    }
+                })
+                .build(app)?;
+
             let database = db::init(app.handle())?;
             app.manage(database);
             app.manage(LauncherState {
