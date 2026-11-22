@@ -416,3 +416,15 @@ export function listenToProcessState(callback: (event: Event<any>) => void) {
   }
   return Promise.resolve(() => {});
 }
+
+export async function ipcHideToTray(): Promise<void> {
+  if (isTauriRuntime()) {
+    await invoke<void>('hide_to_tray');
+  }
+}
+
+export async function ipcShowFromTray(): Promise<void> {
+  if (isTauriRuntime()) {
+    await invoke<void>('show_from_tray');
+  }
+}
