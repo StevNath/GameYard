@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 :root,
-[data-theme='dark'] {
+[data-theme='candy-on-black'] {
   --gy-bg: #000000;
   --gy-surface: #0d0d0d;
   --gy-elevated: #141414;
@@ -11,6 +11,18 @@
   --gy-ink: #ffffff;
   --gy-muted: #a3a3a3;
   --gy-accent: #93f1f7;
+  --gy-accent-ink: #000000;
+  --gy-warning: #f59e0b;
+}
+
+[data-theme='steam-big-picture'] {
+  --gy-bg: #0e141b;
+  --gy-surface: #171d25;
+  --gy-elevated: #3d4450;
+  --gy-border: #3d4450;
+  --gy-ink: #ffffff;
+  --gy-muted: #a3a3a3;
+  --gy-accent: #4ade80;
   --gy-accent-ink: #000000;
   --gy-warning: #f59e0b;
 }

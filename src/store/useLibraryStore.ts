@@ -26,6 +26,7 @@ import {
 } from '../services/tauriBridge';
 
 export type StoreFilter = 'All' | Storefront;
+export type ThemeMode = 'candy-on-black' | 'steam-big-picture' | 'light';
 
 const STALL_ANGLES: Record<Storefront, number> = {
   Steam: -27,
@@ -42,7 +43,7 @@ interface LibraryState {
   activeGameId: string;
   selectedStorefront: StoreFilter;
   searchQuery: string;
-  theme: 'dark' | 'light';
+  theme: ThemeMode;
   drivesCount: number;
   isScanning: boolean;
   isBooting: boolean;
@@ -56,6 +57,8 @@ interface LibraryState {
   setSelectedStorefront: (storefront: StoreFilter) => void;
   setSearchQuery: (query: string) => void;
   toggleTheme: () => void;
+  setTheme: (theme: ThemeMode) => void;
+  initializeTheme: () => void;
   replayBootAnimation: () => void;
   completeBootAnimation: () => void;
   scanDrives: () => Promise<void>;
@@ -86,7 +89,7 @@ export const useLibraryStore = create<LibraryState>((set, get) => ({
   activeGameId: '',
   selectedStorefront: 'All',
   searchQuery: '',
-  theme: 'dark',
+  theme: 'candy-on-black',
   drivesCount: 3,
   isScanning: false,
   isBooting: true,
@@ -152,9 +155,26 @@ export const useLibraryStore = create<LibraryState>((set, get) => ({
   setSearchQuery: (query) => set({ searchQuery: query }),
 
   toggleTheme: () => {
-    const nextTheme = get().theme === 'dark' ? 'light' : 'dark';
+    const themes: ThemeMode[] = ['candy-on-black', 'steam-big-picture', 'light'];
+    const currentIdx = themes.indexOf(get().theme);
+    const nextTheme = themes[(currentIdx + 1) % themes.length];
     document.documentElement.setAttribute('data-theme', nextTheme);
+    localStorage.setItem('gameyard-theme', nextTheme);
     set({ theme: nextTheme });
+  },
+
+  setTheme: (theme: ThemeMode) => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('gameyard-theme', theme);
+    set({ theme });
+  },
+
+  initializeTheme: () => {
+    const saved = localStorage.getItem('gameyard-theme') as ThemeMode | null;
+    if (saved && ['candy-on-black', 'steam-big-picture', 'light'].includes(saved)) {
+      document.documentElement.setAttribute('data-theme', saved);
+      set({ theme: saved });
+    }
   },
 
   replayBootAnimation: () => set({ isBooting: true }),

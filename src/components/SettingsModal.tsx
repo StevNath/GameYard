@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { X, FolderPlus, Info, Award, Tag } from 'lucide-react';
+import { X, FolderPlus, Info, Award, Tag, Palette, Check } from 'lucide-react';
 import { CustomScanPathManager } from './CustomScanPathManager';
+import { useLibraryStore, ThemeMode } from '../store/useLibraryStore';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -8,7 +9,7 @@ interface SettingsModalProps {
   onPathsChanged: () => void;
 }
 
-type SettingsTab = 'scan-paths' | 'about' | 'credits';
+type SettingsTab = 'scan-paths' | 'appearance' | 'about' | 'credits';
 
 const APP_VERSION = '0.1.2';
 
@@ -18,8 +19,36 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   onPathsChanged,
 }) => {
   const [activeTab, setActiveTab] = useState<SettingsTab>('scan-paths');
+  const { theme, setTheme } = useLibraryStore();
 
   if (!isOpen) return null;
+
+  const themes: { id: ThemeMode; name: string; desc: string; bg: string; accent: string; layoutText: string }[] = [
+    {
+      id: 'candy-on-black',
+      name: 'Candy-on-Black (Default)',
+      desc: 'Utilitarian pitch-black canvas with 3-Zone launcher layout',
+      bg: '#000000',
+      accent: '#93F1F7',
+      layoutText: '3-Zone Layout',
+    },
+    {
+      id: 'steam-big-picture',
+      name: 'Steam Big Picture',
+      desc: 'Dark navy console-first design with 6-column poster grid',
+      bg: '#0E141B',
+      accent: '#4ADE80',
+      layoutText: 'Console Grid Mode',
+    },
+    {
+      id: 'light',
+      name: 'Light Mode',
+      desc: 'Clean light theme for bright environments',
+      bg: '#F4F4F0',
+      accent: '#111111',
+      layoutText: '3-Zone Layout',
+    },
+  ];
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 animate-gy-drawer-open">
@@ -31,7 +60,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               Settings & Info
             </h2>
             <p className="font-mono text-[11px] text-gy-muted mt-1">
-              Configure scan paths, view system information and credits
+              Configure scan paths, change appearance themes, view system information
             </p>
           </div>
           <button
@@ -44,13 +73,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         </div>
 
         {/* Navigation Tabs */}
-        <div className="flex border-b border-gy-border bg-gy-elevated/50 px-6 gap-2">
+        <div className="flex border-b border-gy-border bg-gy-elevated/50 px-6 gap-2 overflow-x-auto">
           <button
             type="button"
             onClick={() => setActiveTab('scan-paths')}
-            className={`min-h-[44px] px-4 font-sans text-xs font-semibold flex items-center gap-2 border-b-2 cursor-pointer transition-colors ${
+            className={`min-h-[44px] px-4 font-sans text-xs font-semibold flex items-center gap-2 border-b-2 cursor-pointer transition-colors shrink-0 ${
               activeTab === 'scan-paths'
-                ? 'border-[#93F1F7] text-[#93F1F7]'
+                ? 'border-gy-accent text-gy-accent'
                 : 'border-transparent text-gy-muted hover:text-gy-ink'
             }`}
           >
@@ -60,10 +89,23 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
           <button
             type="button"
+            onClick={() => setActiveTab('appearance')}
+            className={`min-h-[44px] px-4 font-sans text-xs font-semibold flex items-center gap-2 border-b-2 cursor-pointer transition-colors shrink-0 ${
+              activeTab === 'appearance'
+                ? 'border-gy-accent text-gy-accent'
+                : 'border-transparent text-gy-muted hover:text-gy-ink'
+            }`}
+          >
+            <Palette className="w-4 h-4" />
+            <span>Appearance</span>
+          </button>
+
+          <button
+            type="button"
             onClick={() => setActiveTab('about')}
-            className={`min-h-[44px] px-4 font-sans text-xs font-semibold flex items-center gap-2 border-b-2 cursor-pointer transition-colors ${
+            className={`min-h-[44px] px-4 font-sans text-xs font-semibold flex items-center gap-2 border-b-2 cursor-pointer transition-colors shrink-0 ${
               activeTab === 'about'
-                ? 'border-[#93F1F7] text-[#93F1F7]'
+                ? 'border-gy-accent text-gy-accent'
                 : 'border-transparent text-gy-muted hover:text-gy-ink'
             }`}
           >
@@ -74,9 +116,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           <button
             type="button"
             onClick={() => setActiveTab('credits')}
-            className={`min-h-[44px] px-4 font-sans text-xs font-semibold flex items-center gap-2 border-b-2 cursor-pointer transition-colors ${
+            className={`min-h-[44px] px-4 font-sans text-xs font-semibold flex items-center gap-2 border-b-2 cursor-pointer transition-colors shrink-0 ${
               activeTab === 'credits'
-                ? 'border-[#93F1F7] text-[#93F1F7]'
+                ? 'border-gy-accent text-gy-accent'
                 : 'border-transparent text-gy-muted hover:text-gy-ink'
             }`}
           >
@@ -96,6 +138,69 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             />
           )}
 
+          {activeTab === 'appearance' && (
+            <div className="p-6 space-y-4">
+              <div>
+                <h3 className="font-display font-bold text-sm text-gy-ink uppercase tracking-tight">
+                  THEME & LAYOUT SELECTION
+                </h3>
+                <p className="font-mono text-xs text-gy-muted mt-1">
+                  Choose your preferred launcher theme. Themes adapt both color palette and layout architecture.
+                </p>
+              </div>
+
+              <div className="space-y-3">
+                {themes.map((t) => {
+                  const isSelected = theme === t.id;
+                  return (
+                    <div
+                      key={t.id}
+                      onClick={() => setTheme(t.id)}
+                      className={`p-4 rounded-gySm border transition-all cursor-pointer flex items-center justify-between gap-4 ${
+                        isSelected
+                          ? 'bg-gy-elevated border-gy-accent ring-1 ring-gy-accent'
+                          : 'bg-gy-bg border-gy-border hover:border-gy-muted'
+                      }`}
+                    >
+                      <div className="flex items-center gap-4">
+                        {/* Swatch Preview */}
+                        <div
+                          className="w-10 h-10 rounded-lg border border-white/20 flex items-center justify-center shrink-0"
+                          style={{ backgroundColor: t.bg }}
+                        >
+                          <div
+                            className="w-4 h-4 rounded-full"
+                            style={{ backgroundColor: t.accent }}
+                          />
+                        </div>
+
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-sans font-bold text-sm text-gy-ink">
+                              {t.name}
+                            </span>
+                            <span className="font-mono text-[10px] px-2 py-0.5 rounded bg-gy-surface border border-gy-border text-gy-muted">
+                              {t.layoutText}
+                            </span>
+                          </div>
+                          <p className="font-mono text-xs text-gy-muted mt-0.5">
+                            {t.desc}
+                          </p>
+                        </div>
+                      </div>
+
+                      {isSelected && (
+                        <div className="w-7 h-7 rounded-full bg-gy-accent text-gy-accent-ink flex items-center justify-center shrink-0">
+                          <Check className="w-4 h-4" />
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {activeTab === 'about' && (
             <div className="p-6 space-y-6">
               <div className="bg-gy-bg border border-gy-border rounded-gySm p-5 space-y-4">
@@ -108,7 +213,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                       Unified Desktop PC Game Launcher & Library Manager
                     </p>
                   </div>
-                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-gySm bg-gy-surface border border-gy-border font-mono text-xs text-[#93F1F7]">
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-gySm bg-gy-surface border border-gy-border font-mono text-xs text-gy-accent">
                     <Tag className="w-3.5 h-3.5" />
                     <span>v{APP_VERSION}</span>
                   </div>
@@ -164,11 +269,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   </div>
                   <div className="flex justify-between border-b border-gy-border/50 pb-2">
                     <span className="text-gy-ink font-semibold">Version</span>
-                    <span className="font-mono text-[#93F1F7]">v{APP_VERSION}</span>
+                    <span className="font-mono text-gy-accent">v{APP_VERSION}</span>
                   </div>
                   <div className="flex justify-between pb-1">
                     <span className="text-gy-ink font-semibold">Repository</span>
-                    <span className="font-mono text-[#93F1F7]">github.com/StevNath/GameYard</span>
+                    <span className="font-mono text-gy-accent">github.com/StevNath/GameYard</span>
                   </div>
                 </div>
               </div>

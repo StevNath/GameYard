@@ -6,20 +6,22 @@ import { LibraryIndexTable } from './components/LibraryIndexTable';
 import { StartupSplash } from './components/StartupSplash';
 import { CustomScanPathManager } from './components/CustomScanPathManager';
 import { SettingsModal } from './components/SettingsModal';
+import { ConsoleGridMode } from './components/ConsoleGridMode';
 import { useLibraryStore } from './store/useLibraryStore';
 import { Terminal } from 'lucide-react';
-
 
 export const App: React.FC = () => {
   const {
     activeGameId,
     isBooting,
+    theme,
     toastMessage,
     triggerGameAction,
     completeBootAnimation,
     clearToast,
     setSearchQuery,
     initializeLibrary,
+    initializeTheme,
     isCustomPathsModalOpen,
     closeCustomPathsModal,
     isSettingsModalOpen,
@@ -28,7 +30,8 @@ export const App: React.FC = () => {
 
   useEffect(() => {
     initializeLibrary();
-  }, [initializeLibrary]);
+    initializeTheme();
+  }, [initializeLibrary, initializeTheme]);
 
   useEffect(() => {
     const handleGlobalKeyDown = (e: KeyboardEvent) => {
@@ -57,25 +60,30 @@ export const App: React.FC = () => {
       {/* Zona 1: Top Command Header (64px) */}
       <HeaderCommandBar />
 
-      {/* Main 2-Column Workspace below Header */}
-      <div className="flex-1 min-h-0 flex flex-col lg:flex-row overflow-hidden">
-        {/* Zona 2: Left Active Launch Stage (440px fixed on desktop) */}
-        <ActiveLaunchStage />
+      {/* Main Workspace: Adapt layout according to active theme */}
+      {theme === 'steam-big-picture' ? (
+        <ConsoleGridMode />
+      ) : (
+        /* Standard 2-Column 3-Zone Workspace below Header */
+        <div className="flex-1 min-h-0 flex flex-col lg:flex-row overflow-hidden">
+          {/* Zona 2: Left Active Launch Stage (440px fixed on desktop) */}
+          <ActiveLaunchStage />
 
-        {/* Zona 3: Right Library Workspace (Pinned Shelf + Execution Table) */}
-        <main className="flex-1 min-w-0 overflow-y-auto p-6 space-y-6 bg-gy-bg">
-          <AsymmetricPinnedShelf />
-          <LibraryIndexTable />
-        </main>
-      </div>
+          {/* Zona 3: Right Library Workspace (Pinned Shelf + Execution Table) */}
+          <main className="flex-1 min-w-0 overflow-y-auto p-6 space-y-6 bg-gy-bg">
+            <AsymmetricPinnedShelf />
+            <LibraryIndexTable />
+          </main>
+        </div>
+      )}
 
       {/* Bottom Telemetry Status Toast Bar */}
       {toastMessage && (
         <div
           key={toastMessage}
-          className="fixed bottom-4 right-6 z-50 bg-gy-surface border border-[#93F1F7] rounded-gySm px-4 py-2.5 flex items-center gap-3 font-mono text-xs text-gy-ink animate-gy-toast-enter"
+          className="fixed bottom-4 right-6 z-50 bg-gy-surface border border-gy-accent rounded-gySm px-4 py-2.5 flex items-center gap-3 font-mono text-xs text-gy-ink animate-gy-toast-enter"
         >
-          <Terminal className="w-3.5 h-3.5 text-[#93F1F7] shrink-0" />
+          <Terminal className="w-3.5 h-3.5 text-gy-accent shrink-0" />
           <span>{toastMessage}</span>
           <button
             type="button"
